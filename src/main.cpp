@@ -1,7 +1,10 @@
+#include "common.h"
+#include "shader.h"
+#include "program.h"
+
 #include <spdlog/spdlog.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <string>
 
 void OnKeyEvent(GLFWwindow* window, int key, int scancode, int action, int mods);
 void OnFramebufferSizeChange(GLFWwindow* window, int width, int height);
@@ -44,6 +47,14 @@ int main(int argc, const char** argv) {
     auto glVersion = glGetString(GL_VERSION);
     // SPDLOG_INFO("OpenGL context version: {}", glVersion); spdlog의 fmt가 달라져서
     SPDLOG_INFO("OpenGL context version: {}", (char *)glVersion);
+
+    ShaderPtr vertShader = Shader::CreateFromFile("./shader/simple.vs", GL_VERTEX_SHADER);
+    ShaderPtr fragShader = Shader::CreateFromFile("./shader/simple.fs", GL_FRAGMENT_SHADER);
+    SPDLOG_INFO("vertex shader id: {}", vertShader->Get());
+    SPDLOG_INFO("fragment shader id: {}", fragShader->Get());
+ 
+    auto program = Program::Create({fragShader, vertShader});
+    SPDLOG_INFO("program id: {}", program->Get());
 
     OnFramebufferSizeChange(window, WINDOW_WIDTH, WINDOW_HEIGHT);
     glfwSetFramebufferSizeCallback(window, OnFramebufferSizeChange);
