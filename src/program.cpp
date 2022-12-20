@@ -30,3 +30,7 @@ bool Program::Link(
     }
     return true;
 }
+
+void Program::Use(){
+    glUseProgram(m_program);
+}

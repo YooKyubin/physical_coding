@@ -53,7 +53,7 @@ int main(int argc, const char** argv) {
         return -1;
     }
 
-    OnFramebufferSizeChange(window, WINDOW_WIDTH, WINDOW_HEIGHT);
+    // OnFramebufferSizeChange(window, WINDOW_WIDTH, WINDOW_HEIGHT);
     glfwSetFramebufferSizeCallback(window, OnFramebufferSizeChange);
     glfwSetKeyCallback(window, OnKeyEvent);
 
