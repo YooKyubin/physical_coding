@@ -7,6 +7,7 @@
 #include "buffer.h"
 #include "vertex_layout.h"
 #include "texture.h"
+#include "image.h"
 
 CLASS_PTR(Context)
 class Context {
@@ -23,6 +24,7 @@ private:
     BufferUPtr m_vertexBuffer;
     BufferUPtr m_indexBuffer;
     TextureUPtr m_texture;
+    TextureUPtr m_texture2;
 };
 
 #endif // __CONTEXT_H__

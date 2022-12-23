@@ -1,5 +1,5 @@
 #include "context.h"
-#include "image.h"
+// #include "image.h"
 
 ContextUPtr Context::Create() {
     auto context = ContextUPtr(new Context());
@@ -49,12 +49,16 @@ bool Context::Init() {
     SPDLOG_INFO("program id: {}", m_program->Get()); 
 
     // auto loc = glGetUniformLocation(m_program->Get(), "color");
-    m_program->Use(); // 꼭 while문 안에 (Render 함수 안에) 있지 않아도 문제 없는 것 같다.?
+    // m_program->Use(); // 꼭 while문 안에 (Render 함수 안에) 있지 않아도 문제 없는 것 같다? uniform 사용 전에만 하면 되나봄
     // glUniform4f(loc, 1.0f, 1.0f, 0.0f, 1.0f);
 
     glClearColor(1.0f, 0.85f, 0.89f, 1.0f);
  
-    auto image = Image::Load("./image/container.jpg");
+    // auto image = Image::Load("./image/container.jpg");
+
+    auto image = Image::Create(512, 512);
+    image->SetCheckImage(16, 16);
+
     if (!image) 
         return false;
     SPDLOG_INFO("image: {}x{}, {} channels",
@@ -62,9 +66,17 @@ bool Context::Init() {
 
     m_texture = Texture::CreateFromImage(image.get());
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
-        image->GetWidth(), image->GetHeight(), 0,
-        GL_RGB, GL_UNSIGNED_BYTE, image->GetData());
+    auto image2 = Image::Load("./image/awesomeface.png");
+    m_texture2 = Texture::CreateFromImage(image2.get());
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, m_texture->Get());
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, m_texture2->Get());
+
+    m_program->Use();
+    glUniform1i(glGetUniformLocation(m_program->Get(), "tex"), 0);
+    glUniform1i(glGetUniformLocation(m_program->Get(), "tex2"), 1);
 
     return true;
 }
@@ -75,7 +87,7 @@ void Context::Render() {
     // static float time = 0.0f;
     // float t = sinf(time) * 0.5f + 0.5f;
     // auto loc = glGetUniformLocation(m_program->Get(), "color");
-    // // m_program->Use();
+    // m_program->Use();
     // glUniform4f(loc, t*t, 2.0f*t*(1.0f-t), (1.0f-t)*(1.0f-t), 1.0f);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
