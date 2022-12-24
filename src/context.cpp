@@ -54,10 +54,10 @@ bool Context::Init() {
 
     glClearColor(1.0f, 0.85f, 0.89f, 1.0f);
  
-    // auto image = Image::Load("./image/container.jpg");
+    auto image = Image::Load("./image/container.jpg");
 
-    auto image = Image::Create(512, 512);
-    image->SetCheckImage(16, 16);
+    // auto image = Image::Create(512, 512);
+    // image->SetCheckImage(16, 16);
 
     if (!image) 
         return false;
@@ -77,6 +77,15 @@ bool Context::Init() {
     m_program->Use();
     glUniform1i(glGetUniformLocation(m_program->Get(), "tex"), 0);
     glUniform1i(glGetUniformLocation(m_program->Get(), "tex2"), 1);
+
+    // 0.5배 축소후 z축으로 90도 회전하는 행렬
+    auto transform = glm::rotate(
+        glm::scale(glm::mat4(1.0f), glm::vec3(0.5f)),
+        glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)
+        );
+    // auto transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.3f, 0.2f, 0));
+    auto transformLoc = glGetUniformLocation(m_program->Get(), "transform");
+    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
 
     return true;
 }
