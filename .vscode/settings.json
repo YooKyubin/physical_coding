@@ -1,5 +1,19 @@
 {
     "cmake.debugConfig": {
         "cwd": "${workspaceFolder}"
+        //"type": "lldb"
+    },
+    "files.associations": {
+        "__locale": "c",
+        "atomic": "c",
+        "cstdlib": "c",
+        "filesystem": "c",
+        "locale": "c",
+        "new": "c",
+        "ostream": "c",
+        "typeinfo": "c",
+        "algorithm": "c",
+        "complex": "c",
+        "vector": "cpp"
     }
 }
