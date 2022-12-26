@@ -147,25 +147,17 @@ void Context::Render() {
 
     // projection
     auto projection = glm::perspective(glm::radians(45.0f),
-        (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 1.0f, 30.0f); //(2.2f, 15.0f)nearplane, farplane에 딱 걸침
+        (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.01f, 30.0f); //(2.2f, 15.0f)nearplane, farplane에 딱 걸침
     
     // view
-    float x = sinf((float)glfwGetTime() * glm::pi<float>() * 1.0f) * 3.0f;
-    auto cameraPos = glm::vec3(x, 0.0f, 3.0f);
+    float angle = glfwGetTime() * glm::pi<float>() * 0.5f;
+    float x = sinf(angle) * 10.0f;
+    float z = cosf(angle) * 10.0f;
+    glm::vec3 cameraPos = glm::vec3(x, 0.0f, z);
     auto cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
     auto cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-
-    auto cameraZ = glm::normalize(cameraPos - cameraTarget);
-    auto cameraX = glm::normalize(glm::cross(cameraUp, cameraZ));
-    auto cameraY = glm::cross(cameraZ, cameraX);
-
-    auto cameraMat = glm::mat4(
-        glm::vec4(cameraX, 0.0f),
-        glm::vec4(cameraY, 0.0f),
-        glm::vec4(cameraZ, 0.0f),
-        glm::vec4(cameraPos, 1.0f));
-
-    auto view = glm::inverse(cameraMat);
+    
+    auto view = glm::lookAt(cameraPos, cameraTarget, cameraUp);
 
     // model
     for (size_t i = 0; i < cubePositions.size(); i++){
