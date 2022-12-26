@@ -145,19 +145,38 @@ void Context::Render() {
 
     // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    // projection
     auto projection = glm::perspective(glm::radians(45.0f),
-        (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.01f, 20.0f);
-    auto view = glm::translate(glm::mat4(1.0f),
-        glm::vec3(0.0f, 0.0f, -3.0f));
+        (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 1.0f, 30.0f); //(2.2f, 15.0f)nearplane, farplane에 딱 걸침
+    
+    // view
+    float x = sinf((float)glfwGetTime() * glm::pi<float>() * 1.0f) * 3.0f;
+    auto cameraPos = glm::vec3(x, 0.0f, 3.0f);
+    auto cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
+    auto cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
+    auto cameraZ = glm::normalize(cameraPos - cameraTarget);
+    auto cameraX = glm::normalize(glm::cross(cameraUp, cameraZ));
+    auto cameraY = glm::cross(cameraZ, cameraX);
+
+    auto cameraMat = glm::mat4(
+        glm::vec4(cameraX, 0.0f),
+        glm::vec4(cameraY, 0.0f),
+        glm::vec4(cameraZ, 0.0f),
+        glm::vec4(cameraPos, 1.0f));
+
+    auto view = glm::inverse(cameraMat);
+
+    // model
     for (size_t i = 0; i < cubePositions.size(); i++){
         auto& pos = cubePositions[i];
         auto model = glm::translate(glm::mat4(1.0f), pos);
         model = glm::rotate(model,
             // glm::radians((float)glfwGetTime() * 120.0f + 20.0f * (float)i),
-            glm::radians((float)glfwGetTime() * 60.0f * (float)(i+1)),
-            glm::vec3(1.0f, 0.5f, (float)i/2));
+            glm::radians((float)glfwGetTime() * 120.0f + (float)i * 20.0f),
+            glm::vec3(1.0f, 0.5f, 0.0f));
         auto transform = projection * view * model;
+        // auto transform = projection * model * view;
         m_program->SetUniform("transform", transform);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
     }
