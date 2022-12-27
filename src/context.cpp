@@ -222,4 +222,13 @@ void Context::Render() {
         m_program->SetUniform("transform", transform);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
     }
+    glm::vec3 pos = m_cameraPos;
+    auto model = glm::translate(glm::mat4(1.0f), pos);
+    model = glm::rotate(model,
+        glm::radians((float)glfwGetTime() * 360.0f),
+        glm::vec3(1.0f, 1.0f, 0.0f));
+    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 3.0f));
+    auto transform = projection * view * model;
+    m_program->SetUniform("transform", transform);
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 }
