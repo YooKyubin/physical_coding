@@ -143,7 +143,7 @@ bool Context::Init() {
     // m_program->Use(); // 꼭 while문 안에 (Render 함수 안에) 있지 않아도 문제 없는 것 같다? uniform 사용 전에만 하면 되나봄
     // glUniform4f(loc, 1.0f, 1.0f, 0.0f, 1.0f);
 
-    glClearColor(1.0f, 0.85f, 0.89f, 1.0f);
+    glClearColor(m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
  
     auto image = Image::Load("./image/container.jpg");
 
@@ -175,10 +175,23 @@ bool Context::Init() {
 }
 
 void Context::Render() {
-    if (ImGui::Begin("my first ImGui window")) {
-	    ImGui::Text("This is first text...");
-	}
-	ImGui::End();
+    if (ImGui::Begin("ui window")) {
+        if (ImGui::ColorEdit4("clear color", glm::value_ptr(m_clearColor))) {
+            glClearColor(m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
+        }
+        ImGui::Separator();
+        ImGui::DragFloat3("camera pos", glm::value_ptr(m_cameraPos), 0.01f);
+        ImGui::DragFloat("camera yaw", &m_cameraYaw, 0.5f);
+        ImGui::DragFloat("camera pitch", &m_cameraPitch, 0.5f, -89.0f, 89.0f);
+        ImGui::Separator();
+        if (ImGui::Button("reset camera")) {
+            m_cameraYaw = 0.0f;
+            m_cameraPitch = 0.0f;
+            m_cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+        }
+    }
+    ImGui::End();
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 

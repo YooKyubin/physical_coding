@@ -31,6 +31,9 @@ private:
     TextureUPtr m_texture;
     TextureUPtr m_texture2;
 
+    // clear color
+    glm::vec4 m_clearColor { glm::vec4(1.0f, 0.85f, 0.89f, 1.0f) };
+
     // camera parameter
     glm::vec3 m_cameraPos { glm::vec3(0.0f, 0.0f, 3.0f) };
     glm::vec3 m_cameraFront { glm::vec3(0.0f, 0.0f, -1.0f) };
