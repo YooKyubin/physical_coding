@@ -9,6 +9,8 @@
 void OnKeyEvent(GLFWwindow* window, int key, int scancode, int action, int mods);
 void OnCursorPos(GLFWwindow* window, double x, double y);
 void OnMouseButton(GLFWwindow* window, int button, int action, int modifier);
+void OnCharEvent(GLFWwindow* window, unsigned int ch);
+void OnScroll(GLFWwindow* window, double xoffset, double yoffset);
 void OnFramebufferSizeChange(GLFWwindow* window, int width, int height);
 
 int main(int argc, const char** argv) {
@@ -71,6 +73,8 @@ int main(int argc, const char** argv) {
     glfwSetKeyCallback(window, OnKeyEvent);
     glfwSetCursorPosCallback(window, OnCursorPos);
     glfwSetMouseButtonCallback(window, OnMouseButton);
+    glfwSetCharCallback(window, OnCharEvent);
+    glfwSetScrollCallback(window, OnScroll);
 
     // glfw 루프 실행, 윈도우 close 버튼을 누르면 정상 종료
     SPDLOG_INFO("Start main loop");
@@ -111,6 +115,7 @@ void OnKeyEvent(GLFWwindow* window,
         mods & GLFW_MOD_CONTROL ? "C" : "-",
         mods & GLFW_MOD_SHIFT ? "S" : "-",
         mods & GLFW_MOD_ALT ? "A" : "-");
+    ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
@@ -122,6 +127,7 @@ void OnCursorPos(GLFWwindow* window, double x, double y) {
 }
 
 void OnMouseButton(GLFWwindow* window, int button, int action, int modifier) {
+    ImGui_ImplGlfw_MouseButtonCallback(window, button, action, modifier);
 	auto context = (Context*)glfwGetWindowUserPointer(window);
 	double x, y;
 	glfwGetCursorPos(window, &x, &y);
@@ -133,4 +139,12 @@ void OnFramebufferSizeChange(GLFWwindow* window, int width, int height) {
     auto context = (Context*)glfwGetWindowUserPointer(window);
     // auto context = reinterpret_cast<Context*>(glfwGetWindowUserPointer(window));
     context->Reshape(width, height);
+}
+
+void OnCharEvent(GLFWwindow* window, unsigned int ch) {
+    ImGui_ImplGlfw_CharCallback(window, ch);
+}
+
+void OnScroll(GLFWwindow* window, double xoffset, double yoffset) {
+    ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
 }
