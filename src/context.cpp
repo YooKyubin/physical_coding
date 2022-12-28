@@ -1,5 +1,6 @@
 #include "context.h"
-// #include "image.h"
+#include "image.h"
+#include <imgui.h>
 
 ContextUPtr Context::Create() {
     auto context = ContextUPtr(new Context());
@@ -174,6 +175,10 @@ bool Context::Init() {
 }
 
 void Context::Render() {
+    if (ImGui::Begin("my first ImGui window")) {
+	    ImGui::Text("This is first text...");
+	}
+	ImGui::End();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 

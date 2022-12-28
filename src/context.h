@@ -7,7 +7,7 @@
 #include "buffer.h"
 #include "vertex_layout.h"
 #include "texture.h"
-#include "image.h"
+
 
 CLASS_PTR(Context)
 class Context {

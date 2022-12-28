@@ -3,6 +3,8 @@
 #include <spdlog/spdlog.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
 
 void OnKeyEvent(GLFWwindow* window, int key, int scancode, int action, int mods);
 void OnCursorPos(GLFWwindow* window, double x, double y);
@@ -48,6 +50,14 @@ int main(int argc, const char** argv) {
     // SPDLOG_INFO("OpenGL context version: {}", glVersion); spdlog의 fmt가 달라져서
     SPDLOG_INFO("OpenGL context version: {}", (char *)glVersion);
     
+    //ImGui 초기화
+    auto imguiContext = ImGui::CreateContext();
+    ImGui::SetCurrentContext(imguiContext);
+    ImGui_ImplGlfw_InitForOpenGL(window, false);
+    ImGui_ImplOpenGL3_Init();
+    ImGui_ImplOpenGL3_CreateFontsTexture();
+    ImGui_ImplOpenGL3_CreateDeviceObjects();
+
     auto context = Context::Create();
     if (!context) {
         SPDLOG_ERROR("failed to create context");
@@ -65,15 +75,26 @@ int main(int argc, const char** argv) {
     // glfw 루프 실행, 윈도우 close 버튼을 누르면 정상 종료
     SPDLOG_INFO("Start main loop");
     while (!glfwWindowShouldClose(window)) {
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
         glfwPollEvents();
         context->ProcessInput(window);
 
         context->Render();
 
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);
     }
     // context = nullptr;
     context.reset();
+
+    ImGui_ImplOpenGL3_DestroyFontsTexture();
+    ImGui_ImplOpenGL3_DestroyDeviceObjects();
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext(imguiContext);
 
     glfwTerminate();
 
