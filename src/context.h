@@ -42,6 +42,8 @@ private:
 	glm::vec3 m_lightColor { glm::vec3(1.0f, 1.0f, 1.0f) }; // 백색광
 	glm::vec3 m_objectColor { glm::vec3(1.0f, 0.01f, 0.31f) };
 	float m_ambientStrength { 0.1f };// 기본 밝기가 살짝 어두움
+    float m_specularStrength { 0.5f };
+    float m_specularShininess { 32.0f };
 
     // camera parameter
     glm::vec3 m_cameraPos { glm::vec3(0.0f, 0.0f, 3.0f) };
