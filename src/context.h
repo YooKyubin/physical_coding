@@ -31,10 +31,14 @@ private:
     TextureUPtr m_texture;
     TextureUPtr m_texture2;
 
+    // animation
+	bool m_animation { true };
+
     // clear color
     glm::vec4 m_clearColor { glm::vec4(1.0f, 0.85f, 0.89f, 1.0f) };
 
     // light parameter
+    glm::vec3 m_lightPos { glm::vec3(3.0f, 3.0f, 3.0f) };
 	glm::vec3 m_lightColor { glm::vec3(1.0f, 1.0f, 1.0f) }; // 백색광
 	glm::vec3 m_objectColor { glm::vec3(1.0f, 0.01f, 0.31f) };
 	float m_ambientStrength { 0.1f };// 기본 밝기가 살짝 어두움
