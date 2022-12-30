@@ -126,30 +126,20 @@ bool Context::Init() {
     m_indexBuffer = Buffer::CreateWithData(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW,
         indices, sizeof(uint32_t)*36);
     
-    // Shader Class
-    ShaderPtr vertShader = Shader::CreateFromFile("./shader/lighting.vs", GL_VERTEX_SHADER);
-    ShaderPtr fragShader = Shader::CreateFromFile("./shader/lighting.fs", GL_FRAGMENT_SHADER);
-    if (!vertShader || !fragShader)
+    // program 선언
+    m_simpleProgram = Program::Create("./shader/simple.vs", "./shader/simple.fs");
+    if (!m_simpleProgram)
         return false;
-    SPDLOG_INFO("vertex shader id: {}", vertShader->Get());
-    SPDLOG_INFO("fragment shader id: {}", fragShader->Get());
-    
-    // Program
-    m_program = Program::Create({fragShader, vertShader});
+    SPDLOG_INFO("program id: {}", m_simpleProgram->Get()); 
+
+    m_program = Program::Create("./shader/lighting.vs", "./shader/lighting.fs");
     if (!m_program)
         return false;
     SPDLOG_INFO("program id: {}", m_program->Get()); 
 
-    // auto loc = glGetUniformLocation(m_program->Get(), "color");
-    // m_program->Use(); // 꼭 while문 안에 (Render 함수 안에) 있지 않아도 문제 없는 것 같다? uniform 사용 전에만 하면 되나봄
-    // glUniform4f(loc, 1.0f, 1.0f, 0.0f, 1.0f);
-
     glClearColor(m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
  
     auto image = Image::Load("./image/container.jpg");
-
-    // auto image = Image::Create(512, 512);
-    // image->SetCheckImage(16, 16);
 
     if (!image) 
         return false;
@@ -160,6 +150,9 @@ bool Context::Init() {
 
     auto image2 = Image::Load("./image/awesomeface.png");
     m_texture2 = Texture::CreateFromImage(image2.get());
+
+    m_material.diffuse = Texture::CreateFromImage(
+        Image::Load("./image/container2.png").get());
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, m_texture->Get());
@@ -198,8 +191,6 @@ void Context::Render() {
         }
     
         if (ImGui::CollapsingHeader("material", ImGuiTreeNodeFlags_DefaultOpen)) {
-            ImGui::ColorEdit3("m.ambient", glm::value_ptr(m_material.ambient));
-            ImGui::ColorEdit3("m.diffuse", glm::value_ptr(m_material.diffuse));
             ImGui::ColorEdit3("m.specular", glm::value_ptr(m_material.specular));
             ImGui::DragFloat("m.shininess", &m_material.shininess, 1.0f, 1.0f, 256.0f);
         }
@@ -243,14 +234,11 @@ void Context::Render() {
     
     // 광원 큐브
     auto lightModelTransform =
-        glm::translate(glm::mat4(1.0), m_light.position) * 
+        glm::translate(glm::mat4(1.0), m_light.position) *
         glm::scale(glm::mat4(1.0), glm::vec3(0.1f));
-    m_program->Use();
-    m_program->SetUniform("light.position", m_light.position);
-    m_program->SetUniform("light.ambient", m_light.diffuse);
-    m_program->SetUniform("material.ambient", m_light.diffuse); // 조명의 색이라 실제 object의 ambient가 필요하지 않음
-    m_program->SetUniform("transform", projection * view * lightModelTransform);
-    m_program->SetUniform("modelTransform", lightModelTransform);
+    m_simpleProgram->Use();
+    m_simpleProgram->SetUniform("color", glm::vec4(m_light.ambient + m_light.diffuse, 1.0f));
+    m_simpleProgram->SetUniform("transform", projection * view * lightModelTransform);
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
     // model
@@ -261,10 +249,12 @@ void Context::Render() {
     m_program->SetUniform("light.ambient", m_light.ambient);
     m_program->SetUniform("light.diffuse", m_light.diffuse);
     m_program->SetUniform("light.specular", m_light.specular);
-    m_program->SetUniform("material.ambient", m_material.ambient);
-    m_program->SetUniform("material.diffuse", m_material.diffuse);
+    m_program->SetUniform("material.diffuse", 0);
     m_program->SetUniform("material.specular", m_material.specular);
     m_program->SetUniform("material.shininess", m_material.shininess);
+
+    glActiveTexture(GL_TEXTURE0);
+    m_material.diffuse->Bind();
 
     for (size_t i = 0; i < cubePositions.size(); i++){
         auto& pos = cubePositions[i];
