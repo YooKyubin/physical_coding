@@ -15,6 +15,10 @@
         "algorithm": "c",
         "complex": "c",
         "vector": "cpp",
-        "iosfwd": "cpp"
+        "iosfwd": "cpp",
+        "array": "cpp",
+        "span": "cpp",
+        "string": "cpp",
+        "string_view": "cpp"
     }
 }

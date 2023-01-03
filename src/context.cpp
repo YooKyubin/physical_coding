@@ -73,6 +73,9 @@ void Context::MouseButton(int button, int action, double x, double y) {
 bool Context::Init() {
 
     m_box = Mesh::CreateBox();
+    m_model = Model::Load("./model/backpack.obj");
+    if (!m_model)
+        return false;
 	
 	m_simpleProgram = Program::Create("./shader/simple.vs", "./shader/simple.fs");
     
@@ -101,11 +104,17 @@ bool Context::Init() {
     auto image2 = Image::Load("./image/awesomeface.png");
     m_texture2 = Texture::CreateFromImage(image2.get());
 
+    // m_material.diffuse = Texture::CreateFromImage(
+    //     Image::Load("./image/container2.png").get());
+
+    // m_material.specular = Texture::CreateFromImage(
+    //     Image::Load("./image/container2_specular.png").get());
+
     m_material.diffuse = Texture::CreateFromImage(
-        Image::Load("./image/container2.png").get());
+        Image::CreateSingleColorImage(4, 4, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)).get());
 
     m_material.specular = Texture::CreateFromImage(
-        Image::Load("./image/container2_specular.png").get());
+        Image::CreateSingleColorImage(4, 4, glm::vec4(0.5f, 0.5f, 0.5f, 1.0f)).get());
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, m_texture->Get());
@@ -158,21 +167,6 @@ void Context::Render() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 
-    std::vector<glm::vec3> cubePositions = {
-        glm::vec3( 0.0f, 0.0f, 0.0f),
-        glm::vec3( 2.0f, 5.0f, -15.0f),
-        glm::vec3(-1.5f, -2.2f, -2.5f),
-        glm::vec3(-3.8f, -2.0f, -12.3f),
-        glm::vec3( 2.4f, -0.4f, -3.5f),
-        glm::vec3(-1.7f, 3.0f, -7.5f),
-        glm::vec3( 1.3f, -2.0f, -2.5f),
-        glm::vec3( 1.5f, 2.0f, -2.5f),
-        glm::vec3( 1.5f, 0.2f, -1.5f),
-        glm::vec3(-1.3f, 1.0f, -1.5f),
-    };
-
-    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     m_cameraFront =
         glm::rotate(glm::mat4(1.0f), glm::radians(m_cameraYaw), glm::vec3(0.0f, 1.0f, 0.0f)) * 
         glm::rotate(glm::mat4(1.0f), glm::radians(m_cameraPitch), glm::vec3(1.0f, 0.0f, 0.0f)) * 
@@ -198,6 +192,7 @@ void Context::Render() {
     // glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
     m_box->Draw();
 
+    //손전등 시뮬레이션
     // m_light.position = m_cameraPos;
     // m_light.direction = m_cameraFront;
 
@@ -223,19 +218,11 @@ void Context::Render() {
     glActiveTexture(GL_TEXTURE1);
     m_material.specular->Bind();
 
-    for (size_t i = 0; i < cubePositions.size(); i++){
-        auto& pos = cubePositions[i];
-        auto model = glm::translate(glm::mat4(1.0f), pos);
-        model = glm::rotate(model,
-            // glm::radians((float)glfwGetTime() * 120.0f + 20.0f * (float)i),
-            glm::radians((m_animation ? (float)glfwGetTime() : 0.0f) * 120.0f + (float)i * 20.0f),
-            glm::vec3(1.0f, 0.5f, 0.0f));
-        auto transform = projection * view * model;
-        // auto transform = projection * model * view;
-        m_program->SetUniform("transform", transform);
-        m_program->SetUniform("modelTransform", model);
-        m_box->Draw();
-    }
+    auto modelTransform = glm::mat4(1.0f);
+    auto transform = projection * view * modelTransform;
+    m_program->SetUniform("transform", transform);
+    m_program->SetUniform("modelTransform", modelTransform);
+    m_model->Draw();
 
     // 카메라 위성
     glm::vec3 pos = m_cameraPos;
@@ -244,8 +231,8 @@ void Context::Render() {
         glm::radians( (m_animation ? (float)glfwGetTime() * 360.0f : 0.0f)),
         glm::vec3(1.0f, 1.0f, 0.0f));
     model = glm::translate(model, glm::vec3(0.0f, 0.0f, 3.0f));
-    auto transform = projection * view * model;
-    m_program->SetUniform("transform", transform);
+    auto box_transform = projection * view * model;
+    m_program->SetUniform("transform", box_transform);
     m_program->SetUniform("modelTransform", model);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+    m_box->Draw();
 }
