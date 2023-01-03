@@ -30,3 +30,7 @@ void VertexLayout::Init() {
     glGenVertexArrays(1, &m_vertexArrayObject);
     Bind();
 }
+
+void DisableAttrib(int attribIndex) {
+    glDisableVertexAttribArray(attribIndex);
+}
