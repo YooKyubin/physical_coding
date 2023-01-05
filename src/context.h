@@ -26,6 +26,7 @@ private:
     bool Init();
     ProgramUPtr m_program;
     ProgramUPtr m_simpleProgram;
+    ProgramUPtr m_boxProgram;
 
 
     // VertexLayoutUPtr m_vertexLayout;
@@ -53,6 +54,7 @@ private:
         glm::vec3 specular { glm::vec3(1.0f, 1.0f, 1.0f) };
     };
     Light m_light;
+    bool m_flashLightMode { false };
 
     // material parameter
     struct Material {

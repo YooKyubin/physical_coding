@@ -76,8 +76,6 @@ bool Context::Init() {
     m_model = Model::Load("./model/backpack.obj");
     if (!m_model)
         return false;
-	
-	m_simpleProgram = Program::Create("./shader/simple.vs", "./shader/simple.fs");
     
     // program 선언
     m_simpleProgram = Program::Create("./shader/simple.vs", "./shader/simple.fs");
@@ -89,6 +87,12 @@ bool Context::Init() {
     if (!m_program)
         return false;
     SPDLOG_INFO("program id: {}", m_program->Get()); 
+
+    m_boxProgram = Program::Create("./shader/lighting.vs", "./shader/lighting.fs");
+    if (!m_boxProgram)
+        return false;
+    SPDLOG_INFO("program id: {}", m_boxProgram->Get()); 
+
 
     glClearColor(m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
  
@@ -121,12 +125,6 @@ bool Context::Init() {
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, m_texture2->Get());
 
-    m_program->Use();
-    // glUniform1i(glGetUniformLocation(m_program->Get(), "tex"), 0);
-    // glUniform1i(glGetUniformLocation(m_program->Get(), "tex2"), 1);
-    m_program->SetUniform("tex", 0);
-    m_program->SetUniform("tex2", 1);
-
     return true;
 }
 
@@ -154,6 +152,7 @@ void Context::Render() {
             ImGui::ColorEdit3("l.ambient", glm::value_ptr(m_light.ambient));
             ImGui::ColorEdit3("l.diffuse", glm::value_ptr(m_light.diffuse));
             ImGui::ColorEdit3("l.specular", glm::value_ptr(m_light.specular));
+            ImGui::Checkbox("flash light", &m_flashLightMode);
         }
     
         if (ImGui::CollapsingHeader("material", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -182,26 +181,31 @@ void Context::Render() {
 		m_cameraPos + m_cameraFront,
 		m_cameraUp);
     
-    // 광원 큐브
-    auto lightModelTransform =
-        glm::translate(glm::mat4(1.0), m_light.position) *
-        glm::scale(glm::mat4(1.0), glm::vec3(0.1f));
-    m_simpleProgram->Use();
-    m_simpleProgram->SetUniform("color", glm::vec4(m_light.ambient + m_light.diffuse, 1.0f));
-    m_simpleProgram->SetUniform("transform", projection * view * lightModelTransform);
-    // glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-    m_box->Draw();
-
     //손전등 시뮬레이션
-    // m_light.position = m_cameraPos;
-    // m_light.direction = m_cameraFront;
+    glm::vec3 lightPos = m_light.position;
+    glm::vec3 lightDir = m_light.direction;
+    if(m_flashLightMode) {
+        lightPos = m_cameraPos;
+        lightDir = m_cameraFront;
+    }
+    else{
+        // 광원 큐브
+        auto lightModelTransform =
+            glm::translate(glm::mat4(1.0), m_light.position) *
+            glm::scale(glm::mat4(1.0), glm::vec3(0.1f));
+        m_simpleProgram->Use();
+        m_simpleProgram->SetUniform("color", glm::vec4(m_light.ambient + m_light.diffuse, 1.0f));
+        m_simpleProgram->SetUniform("transform", projection * view * lightModelTransform);
+        // glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+        m_box->Draw(m_simpleProgram.get());
+    }
 
     // model
     m_program->Use();
 
     m_program->SetUniform("viewPos", m_cameraPos);
-    m_program->SetUniform("light.position", m_light.position);
-    m_program->SetUniform("light.direction", m_light.direction);
+    m_program->SetUniform("light.position", lightPos);
+    m_program->SetUniform("light.direction", lightDir);
     m_program->SetUniform("light.cutoff", glm::vec2(
         cosf(glm::radians(m_light.cutoff[0])),
         cosf(glm::radians(m_light.cutoff[0] + m_light.cutoff[1]))));
@@ -222,7 +226,7 @@ void Context::Render() {
     auto transform = projection * view * modelTransform;
     m_program->SetUniform("transform", transform);
     m_program->SetUniform("modelTransform", modelTransform);
-    m_model->Draw();
+    m_model->Draw(m_program.get());
 
     // 카메라 위성
     glm::vec3 pos = m_cameraPos;
@@ -232,7 +236,7 @@ void Context::Render() {
         glm::vec3(1.0f, 1.0f, 0.0f));
     model = glm::translate(model, glm::vec3(0.0f, 0.0f, 3.0f));
     auto box_transform = projection * view * model;
-    m_program->SetUniform("transform", box_transform);
-    m_program->SetUniform("modelTransform", model);
-    m_box->Draw();
+    m_boxProgram->SetUniform("transform", box_transform);
+    m_boxProgram->SetUniform("modelTransform", model);
+    m_box->Draw(m_boxProgram.get());
 }
