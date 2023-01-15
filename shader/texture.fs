@@ -5,9 +5,9 @@ in vec2 texCoord;
 out vec4 fragColor;
 
 uniform sampler2D tex;
-uniform sampler2D tex2;
 
 void main() {
-    fragColor = texture(tex, texCoord) * 0.2 + texture(tex2, texCoord) * 0.2
-     + vec4(1.0f, 0.01f, 0.31f, 1.0f)* 0.6;
+    fragColor = texture(tex, texCoord);
 }
+
+// 여러장의 텍스처를 하나의 쉐이더에서 불러서 사용할 수 있다는걸 보여줬었음

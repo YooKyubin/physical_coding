@@ -73,6 +73,7 @@ void Context::MouseButton(int button, int action, double x, double y) {
 bool Context::Init() {
 
     m_box = Mesh::CreateBox();
+    m_plane = Mesh::CreatePlane();
     
     // program 선언
     m_simpleProgram = Program::Create("./shader/simple.vs", "./shader/simple.fs");
@@ -85,19 +86,12 @@ bool Context::Init() {
         return false;
     SPDLOG_INFO("program id: {}", m_program->Get()); 
 
+    m_textureProgram = Program::Create("./shader/texture.vs", "./shader/texture.fs");
+	if (!m_textureProgram)
+		return false;
+    SPDLOG_INFO("program id: {}", m_textureProgram->Get()); 
+
     glClearColor(m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
- 
-    auto image = Image::Load("./image/container.jpg");
-
-    if (!image) 
-        return false;
-    SPDLOG_INFO("image: {}x{}, {} channels",
-        image->GetWidth(), image->GetHeight(), image->GetChannelCount());
-
-    m_texture = Texture::CreateFromImage(image.get());
-
-    auto image2 = Image::Load("./image/awesomeface.png");
-    m_texture2 = Texture::CreateFromImage(image2.get());
 
     TexturePtr darkGrayTexture = Texture::CreateFromImage(
         Image::CreateSingleColorImage(4, 4, glm::vec4(0.2f, 0.2f, 0.2f, 1.0f)).get());
@@ -119,6 +113,9 @@ bool Context::Init() {
     m_box2Material->diffuse = Texture::CreateFromImage(Image::Load("./image/container2.png").get());
     m_box2Material->specular = Texture::CreateFromImage(Image::Load("./image/container2_specular.png").get());
     m_box2Material->shininess = 64.0f;
+    
+    m_windowTexture = Texture::CreateFromImage(
+        Image::Load("./image/blending_transparent_window.png").get());
 
     return true;
 }
@@ -259,4 +256,19 @@ void Context::Render() {
     glDisable(GL_STENCIL_TEST);
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
     glStencilMask(0xFF);
+
+    // blending
+    glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	
+	m_textureProgram->Use();
+	m_windowTexture->Bind();
+	m_textureProgram->SetUniform("tex", 0);
+	
+	modelTransform =
+		glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.5f, 4.0f));
+	transform = projection * view * modelTransform;
+	m_textureProgram->SetUniform("transform", transform);
+	m_plane->Draw(m_textureProgram.get());
+    // glDisable(GL_BLEND);
 }

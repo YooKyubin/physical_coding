@@ -27,16 +27,14 @@ private:
     ProgramUPtr m_program;
     ProgramUPtr m_simpleProgram;
     ProgramUPtr m_boxProgram;
+    ProgramUPtr m_textureProgram;
 
 
     // VertexLayoutUPtr m_vertexLayout;
     // BufferUPtr m_vertexBuffer;
     // BufferUPtr m_indexBuffer;
     MeshUPtr m_box;
-
-
-    TextureUPtr m_texture;
-    TextureUPtr m_texture2;
+    MeshUPtr m_plane;
 
     // animation
 	bool m_animation { true };
@@ -64,6 +62,7 @@ private:
     MaterialPtr m_planeMaterial;  
 	MaterialPtr m_box1Material;  
 	MaterialPtr m_box2Material;
+    TexturePtr m_windowTexture; // 단일 텍스처만 설정하면 되기 때문에 Material일 필요가 없음
 
     // camera parameter
     glm::vec3 m_cameraPos { glm::vec3(0.0f, 2.5f, 8.0f) };
