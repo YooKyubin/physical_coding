@@ -41,6 +41,9 @@ private:
     // animation
 	bool m_animation { true };
 
+    // depth test
+    bool m_depthTest {true};
+
     // clear color
     glm::vec4 m_clearColor { glm::vec4(1.0f, 0.85f, 0.89f, 1.0f) };
 
