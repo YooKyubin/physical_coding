@@ -36,6 +36,9 @@ void Context::Reshape(int width, int height) {
     m_width = width;
     m_height = height;
     glViewport(0, 0, m_width, m_height);
+
+    // 우리는 시작할 때 reshape 함수를 사용하지 않아서 지금 문제가 생김 OnFramebufferSizeChange 이 함수를 
+    m_framebuffer = Framebuffer::Create(Texture::Create(width, height, GL_RGBA));
 }
 
 void Context::MouseMove(double x, double y) {
@@ -154,6 +157,9 @@ void Context::Render() {
         ImGui::Checkbox("depth test", &m_depthTest);
     }
     ImGui::End();
+
+    m_framebuffer->Bind();
+    // 만든 프레임 버퍼에 그리기 시작
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
@@ -287,4 +293,20 @@ void Context::Render() {
 	transform = projection * view * modelTransform;
 	m_textureProgram->SetUniform("transform", transform);
 	m_plane->Draw(m_textureProgram.get());
+
+    // 우리가 만든 프레임 버퍼에 그리기 종료
+    Framebuffer::BindToDefault();
+    // 기본 프레임버퍼(화면) 시작
+	
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+	m_textureProgram->Use();
+	m_textureProgram->SetUniform("transform",
+		glm::scale(glm::mat4(1.0f), glm::vec3(2.0f, 2.0f, 1.0f)));
+	// m_framebuffer->GetColorAttachment()->Bind();
+    TexturePtr grayTexture = Texture::CreateFromImage(
+        Image::CreateSingleColorImage(4, 4, glm::vec4(0.5f, 0.5f, 0.5f, 1.0f)).get());
+    grayTexture->Bind();
+	m_textureProgram->SetUniform("tex", 0);
+	m_plane->Draw(m_textureProgram.get()); 
 }

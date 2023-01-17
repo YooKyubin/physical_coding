@@ -9,6 +9,7 @@
 #include "texture.h"
 #include "mesh.h"
 #include "model.h"
+#include "framebuffer.h"
 
 
 CLASS_PTR(Context)
@@ -72,6 +73,9 @@ private:
 	float m_cameraYaw { 0.0f };
     bool m_cameraControl { false };
 	glm::vec2 m_prevMousePos { glm::vec2(0.0f) };
+
+    // framebuffer
+    FramebufferUPtr m_framebuffer;
 
     int m_width { WINDOW_WIDTH };
     int m_height { WINDOW_HEIGHT };

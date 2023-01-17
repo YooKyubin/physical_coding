@@ -67,8 +67,11 @@ int main(int argc, const char** argv) {
         return -1;
     }
     glfwSetWindowUserPointer(window, context.get());
-
+    
+    // 이거 잊지마
     // OnFramebufferSizeChange(window, WINDOW_WIDTH, WINDOW_HEIGHT);
+    context->Reshape(WINDOW_WIDTH*2, WINDOW_HEIGHT*2);
+
     glfwSetFramebufferSizeCallback(window, OnFramebufferSizeChange);
     glfwSetKeyCallback(window, OnKeyEvent);
     glfwSetCursorPosCallback(window, OnCursorPos);
