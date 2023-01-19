@@ -67,8 +67,7 @@ int main(int argc, const char** argv) {
         return -1;
     }
     glfwSetWindowUserPointer(window, context.get());
-    
-    // 이거 잊지마
+
     OnFramebufferSizeChange(window, WINDOW_WIDTH, WINDOW_HEIGHT);
     glfwSetFramebufferSizeCallback(window, OnFramebufferSizeChange);
     glfwSetKeyCallback(window, OnKeyEvent);
@@ -136,10 +135,10 @@ void OnMouseButton(GLFWwindow* window, int button, int action, int modifier) {
 }
 
 void OnFramebufferSizeChange(GLFWwindow* window, int width, int height) {
-    SPDLOG_INFO("framebuffer size changed: ({} x {})", width, height);
     auto context = (Context*)glfwGetWindowUserPointer(window);
     // auto context = reinterpret_cast<Context*>(glfwGetWindowUserPointer(window));
     glfwGetFramebufferSize(window, &width, &height); //macOS에서 스크린좌표와 픽셀이 1:1매치가 아니라 발생하는 문제해결
+    SPDLOG_INFO("framebuffer size changed: ({} x {})", width, height);
     context->Reshape(width, height);
 }
 

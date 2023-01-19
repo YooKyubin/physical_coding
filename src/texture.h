@@ -24,11 +24,11 @@ private:
     void CreateTexture();
     void SetTextureFromImage(const Image* image);
     void SetTextureFormat(int width, int height, uint32_t format);
-    
+
     uint32_t m_texture { 0 };
     int m_width { 0 };
-	int m_height { 0 };
-	uint32_t m_format { GL_RGBA };
+    int m_height { 0 };
+    uint32_t m_format { GL_RGBA };
 };
 
 #endif // __TEXTURE_H__
