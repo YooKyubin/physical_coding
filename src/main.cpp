@@ -69,9 +69,7 @@ int main(int argc, const char** argv) {
     glfwSetWindowUserPointer(window, context.get());
     
     // 이거 잊지마
-    // OnFramebufferSizeChange(window, WINDOW_WIDTH, WINDOW_HEIGHT);
-    context->Reshape(WINDOW_WIDTH*2, WINDOW_HEIGHT*2);
-
+    OnFramebufferSizeChange(window, WINDOW_WIDTH, WINDOW_HEIGHT);
     glfwSetFramebufferSizeCallback(window, OnFramebufferSizeChange);
     glfwSetKeyCallback(window, OnKeyEvent);
     glfwSetCursorPosCallback(window, OnCursorPos);
@@ -141,6 +139,7 @@ void OnFramebufferSizeChange(GLFWwindow* window, int width, int height) {
     SPDLOG_INFO("framebuffer size changed: ({} x {})", width, height);
     auto context = (Context*)glfwGetWindowUserPointer(window);
     // auto context = reinterpret_cast<Context*>(glfwGetWindowUserPointer(window));
+    glfwGetFramebufferSize(window, &width, &height); //macOS에서 스크린좌표와 픽셀이 1:1매치가 아니라 발생하는 문제해결
     context->Reshape(width, height);
 }
 
