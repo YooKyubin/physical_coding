@@ -36,6 +36,7 @@ void Context::Reshape(int width, int height) {
     m_width = width;
     m_height = height;
     glViewport(0, 0, m_width, m_height);
+    m_framebuffer = Framebuffer::Create(Texture::Create(width, height, GL_RGBA));
 }
 
 void Context::MouseMove(double x, double y) {
@@ -155,11 +156,12 @@ void Context::Render() {
     }
     ImGui::End();
 
+    m_framebuffer->Bind();
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 
     glEnable(GL_CULL_FACE);
-    glFrontFace(GL_CCW);
     glCullFace(GL_FRONT);
 
     m_cameraFront =
@@ -287,4 +289,17 @@ void Context::Render() {
 	transform = projection * view * modelTransform;
 	m_textureProgram->SetUniform("transform", transform);
 	m_plane->Draw(m_textureProgram.get());
+
+    glDisable(GL_CULL_FACE);
+
+    Framebuffer::BindToDefault();
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+    m_textureProgram->Use();
+    m_textureProgram->SetUniform("transform",
+        glm::scale(glm::mat4(1.0f), glm::vec3(2.0f, 2.0f, 1.0f)));
+    m_framebuffer->GetColorAttachment()->Bind();
+    m_textureProgram->SetUniform("tex", 0);
+    m_plane->Draw(m_textureProgram.get()); 
 }
