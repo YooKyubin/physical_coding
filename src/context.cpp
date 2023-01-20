@@ -209,14 +209,16 @@ void Context::Render() {
 		m_cameraUp);
     
     // cube map
+    glDepthMask(GL_FALSE);
     auto skyboxModelTransform =
-		glm::translate(glm::mat4(1.0), m_cameraPos) *
+		glm::translate(glm::mat4(1.0), m_cameraPos * 0.8f) *
 		glm::scale(glm::mat4(1.0), glm::vec3(50.0f));
 	m_skyboxProgram->Use();
 	m_cubeTexture->Bind();
 	m_skyboxProgram->SetUniform("skybox", 0);
 	m_skyboxProgram->SetUniform("transform", projection * view * skyboxModelTransform);
 	m_box->Draw(m_skyboxProgram.get());
+    glDepthMask(GL_TRUE);
 
 
     //손전등 시뮬레이션
