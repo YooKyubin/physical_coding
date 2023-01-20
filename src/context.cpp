@@ -92,6 +92,10 @@ bool Context::Init() {
 		return false;
     SPDLOG_INFO("program id: {}", m_textureProgram->Get()); 
 
+    m_postProgram = Program::Create("./shader/texture.vs", "./shader/invert.fs");
+	if (!m_postProgram)
+	    return false;
+
     glClearColor(m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
 
     TexturePtr darkGrayTexture = Texture::CreateFromImage(
@@ -153,6 +157,11 @@ void Context::Render() {
         }
         ImGui::Checkbox("animation", &m_animation);
         ImGui::Checkbox("depth test", &m_depthTest);
+
+        float aspectRatio = (float)m_width / (float)m_height;
+        // ImGui::Image((void*)m_framebuffer->GetColorAttachment()->Get(),
+        ImGui::Image((ImTextureID)m_framebuffer->GetColorAttachment()->Get(),
+            ImVec2(150 * aspectRatio, 150));
     }
     ImGui::End();
 
@@ -295,11 +304,19 @@ void Context::Render() {
     Framebuffer::BindToDefault();
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-    m_textureProgram->Use();
-    m_textureProgram->SetUniform("transform",
+    
+    Program* program = sinf(glfwGetTime() * 6) > 0.0f ? m_postProgram.get() : m_textureProgram.get();
+    program->Use();
+    program->SetUniform("transform",
         glm::scale(glm::mat4(1.0f), glm::vec3(2.0f, 2.0f, 1.0f)));
     m_framebuffer->GetColorAttachment()->Bind();
-    m_textureProgram->SetUniform("tex", 0);
-    m_plane->Draw(m_textureProgram.get()); 
+    program->SetUniform("tex", 0);
+    m_plane->Draw(program); 
+
+    // m_textureProgram->Use();
+    // m_textureProgram->SetUniform("transform",
+    //     glm::scale(glm::mat4(1.0f), glm::vec3(2.0f, 2.0f, 1.0f)));
+    // m_framebuffer->GetColorAttachment()->Bind();
+    // m_textureProgram->SetUniform("tex", 0);
+    // m_plane->Draw(m_textureProgram.get()); 
 }

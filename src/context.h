@@ -29,6 +29,7 @@ private:
     ProgramUPtr m_simpleProgram;
     ProgramUPtr m_boxProgram;
     ProgramUPtr m_textureProgram;
+    ProgramUPtr m_postProgram;
 
 
     // VertexLayoutUPtr m_vertexLayout;
