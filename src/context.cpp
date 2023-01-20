@@ -96,6 +96,10 @@ bool Context::Init() {
 	if (!m_postProgram)
 	    return false;
 
+    m_skyboxProgram = Program::Create("./shader/skybox.vs", "./shader/skybox.fs");
+	if (!m_skyboxProgram)
+	    return false;
+
     glClearColor(m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
 
     TexturePtr darkGrayTexture = Texture::CreateFromImage(
@@ -121,6 +125,21 @@ bool Context::Init() {
     
     m_windowTexture = Texture::CreateFromImage(
         Image::Load("./image/blending_transparent_window.png").get());
+
+    auto cubeRight = Image::Load("./image/skybox/right.jpg", false);
+	auto cubeLeft = Image::Load("./image/skybox/left.jpg", false);
+	auto cubeTop = Image::Load("./image/skybox/top.jpg", false);
+	auto cubeBottom = Image::Load("./image/skybox/bottom.jpg", false);
+	auto cubeFront = Image::Load("./image/skybox/front.jpg", false);
+	auto cubeBack = Image::Load("./image/skybox/back.jpg", false);
+	m_cubeTexture = CubeTexture::CreateFromImages({
+	    cubeRight.get(),
+	    cubeLeft.get(),
+	    cubeTop.get(),
+	    cubeBottom.get(),
+	    cubeFront.get(),
+	    cubeBack.get(),
+	});
 
     return true;
 }
@@ -171,8 +190,8 @@ void Context::Render() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
+    // glEnable(GL_CULL_FACE);
+    // glCullFace(GL_BACK);
 
     m_cameraFront =
         glm::rotate(glm::mat4(1.0f), glm::radians(m_cameraYaw), glm::vec3(0.0f, 1.0f, 0.0f)) * 
@@ -181,7 +200,7 @@ void Context::Render() {
     
     // projection
     auto projection = glm::perspective(glm::radians(45.0f),
-        (float)m_width / (float)m_height, 0.1f, 30.0f); //(2.2f, 15.0f)nearplane, farplane에 딱 걸침
+        (float)m_width / (float)m_height, 0.1f, 80.0f); // near, far
     
     // view
 	auto view = glm::lookAt(
@@ -189,6 +208,17 @@ void Context::Render() {
 		m_cameraPos + m_cameraFront,
 		m_cameraUp);
     
+    // cube map
+    auto skyboxModelTransform =
+		glm::translate(glm::mat4(1.0), m_cameraPos) *
+		glm::scale(glm::mat4(1.0), glm::vec3(50.0f));
+	m_skyboxProgram->Use();
+	m_cubeTexture->Bind();
+	m_skyboxProgram->SetUniform("skybox", 0);
+	m_skyboxProgram->SetUniform("transform", projection * view * skyboxModelTransform);
+	m_box->Draw(m_skyboxProgram.get());
+
+
     //손전등 시뮬레이션
     glm::vec3 lightPos = m_light.position;
     glm::vec3 lightDir = m_light.direction;
