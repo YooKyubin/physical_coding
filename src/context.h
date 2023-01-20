@@ -30,6 +30,7 @@ private:
     ProgramUPtr m_boxProgram;
     ProgramUPtr m_textureProgram;
     ProgramUPtr m_postProgram;
+    float m_gamma {1.0f};
 
 
     // VertexLayoutUPtr m_vertexLayout;

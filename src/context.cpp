@@ -92,7 +92,7 @@ bool Context::Init() {
 		return false;
     SPDLOG_INFO("program id: {}", m_textureProgram->Get()); 
 
-    m_postProgram = Program::Create("./shader/texture.vs", "./shader/invert.fs");
+    m_postProgram = Program::Create("./shader/texture.vs", "./shader/gamma.fs");
 	if (!m_postProgram)
 	    return false;
 
@@ -134,6 +134,7 @@ void Context::Render() {
         if (ImGui::ColorEdit4("clear color", glm::value_ptr(m_clearColor))) {
             glClearColor(m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
         }
+        ImGui::DragFloat("gamma", &m_gamma, 0.01f, 0.0f, 2.0f);
         ImGui::Separator();
         ImGui::DragFloat3("camera pos", glm::value_ptr(m_cameraPos), 0.01f);
         ImGui::DragFloat("camera yaw", &m_cameraYaw, 0.5f);
@@ -171,7 +172,7 @@ void Context::Render() {
 	glEnable(GL_DEPTH_TEST);
 
     glEnable(GL_CULL_FACE);
-    glCullFace(GL_FRONT);
+    glCullFace(GL_BACK);
 
     m_cameraFront =
         glm::rotate(glm::mat4(1.0f), glm::radians(m_cameraYaw), glm::vec3(0.0f, 1.0f, 0.0f)) * 
@@ -299,24 +300,15 @@ void Context::Render() {
 	m_textureProgram->SetUniform("transform", transform);
 	m_plane->Draw(m_textureProgram.get());
 
-    glDisable(GL_CULL_FACE);
-
     Framebuffer::BindToDefault();
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    
-    Program* program = sinf(glfwGetTime() * 6) > 0.0f ? m_postProgram.get() : m_textureProgram.get();
-    program->Use();
-    program->SetUniform("transform",
+
+    m_postProgram->Use();
+    m_postProgram->SetUniform("transform",
         glm::scale(glm::mat4(1.0f), glm::vec3(2.0f, 2.0f, 1.0f)));
     m_framebuffer->GetColorAttachment()->Bind();
-    program->SetUniform("tex", 0);
-    m_plane->Draw(program); 
-
-    // m_textureProgram->Use();
-    // m_textureProgram->SetUniform("transform",
-    //     glm::scale(glm::mat4(1.0f), glm::vec3(2.0f, 2.0f, 1.0f)));
-    // m_framebuffer->GetColorAttachment()->Bind();
-    // m_textureProgram->SetUniform("tex", 0);
-    // m_plane->Draw(m_textureProgram.get()); 
+    m_postProgram->SetUniform("tex", 0);
+    m_postProgram->SetUniform("gamma", m_gamma);
+    m_plane->Draw(m_postProgram.get()); 
 }
