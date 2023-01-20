@@ -100,6 +100,8 @@ bool Context::Init() {
 	if (!m_skyboxProgram)
 	    return false;
 
+    m_envMapProgram = Program::Create("./shader/env_map.vs", "./shader/env_map.fs");
+
     glClearColor(m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
 
     TexturePtr darkGrayTexture = Texture::CreateFromImage(
@@ -253,7 +255,8 @@ void Context::Render() {
     m_program->SetUniform("light.ambient", m_light.ambient);
     m_program->SetUniform("light.diffuse", m_light.diffuse);
     m_program->SetUniform("light.specular", m_light.specular);
-
+    
+    //plane
     auto modelTransform =
         glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -0.5f, 0.0f)) *
         glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 1.0f, 10.0f));
@@ -263,11 +266,27 @@ void Context::Render() {
     m_planeMaterial->SetToProgram(m_program.get());
     m_box->Draw(m_program.get());
 
+    // envmap cube
+    modelTransform =
+	    glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 0.75f, -2.0f)) *
+	    glm::rotate(glm::mat4(1.0f), glm::radians(40.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
+	    glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
+	m_envMapProgram->Use();
+	m_envMapProgram->SetUniform("model", modelTransform);
+	m_envMapProgram->SetUniform("view", view);
+	m_envMapProgram->SetUniform("projection", projection);
+	m_envMapProgram->SetUniform("cameraPos", m_cameraPos);
+	m_cubeTexture->Bind();
+	m_envMapProgram->SetUniform("skybox", 0);
+	m_box->Draw(m_envMapProgram.get());
+
+    // box1
     modelTransform =
         glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, 0.75f, -4.0f)) *
         glm::rotate(glm::mat4(1.0f), glm::radians(30.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
         glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
     transform = projection * view * modelTransform;
+    m_program->Use();
     m_program->SetUniform("transform", transform);
     m_program->SetUniform("modelTransform", modelTransform);
     m_box1Material->SetToProgram(m_program.get());
@@ -278,11 +297,13 @@ void Context::Render() {
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
     glStencilMask(0xFF);
 
+    // box2
     modelTransform =
         glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.75f, 2.0f)) *
         glm::rotate(glm::mat4(1.0f), glm::radians(20.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * 
         glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
     transform = projection * view * modelTransform;
+    m_program->Use();
     m_program->SetUniform("transform", transform);
     m_program->SetUniform("modelTransform", modelTransform);
     m_box2Material->SetToProgram(m_program.get());
@@ -294,6 +315,7 @@ void Context::Render() {
         glDisable(GL_DEPTH_TEST);
     }
     
+    // box2 stencil
     m_simpleProgram->Use();
     m_simpleProgram->SetUniform("color", glm::vec4(1.0f, 1.0f, 0.5f, 1.0f));
     m_simpleProgram->SetUniform(
@@ -318,7 +340,6 @@ void Context::Render() {
 	transform = projection * view * modelTransform;
 	m_textureProgram->SetUniform("transform", transform);
 	m_plane->Draw(m_textureProgram.get());
-    // glDisable(GL_BLEND);
 
     modelTransform =
 		glm::translate(glm::mat4(1.0f), glm::vec3(0.2f, 0.5f, 5.0f));
@@ -331,6 +352,7 @@ void Context::Render() {
 	transform = projection * view * modelTransform;
 	m_textureProgram->SetUniform("transform", transform);
 	m_plane->Draw(m_textureProgram.get());
+    glDisable(GL_BLEND);
 
     Framebuffer::BindToDefault();
 
