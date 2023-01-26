@@ -72,6 +72,7 @@ void Context::MouseButton(int button, int action, double x, double y) {
 }
 
 bool Context::Init() {
+    glEnable(GL_MULTISAMPLE); // MSAA
 
     m_box = Mesh::CreateBox();
     m_plane = Mesh::CreatePlane();
