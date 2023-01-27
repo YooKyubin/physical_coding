@@ -114,7 +114,7 @@ bool Context::Init() {
     m_planeMaterial = Material::Create();
     m_planeMaterial->diffuse = Texture::CreateFromImage(Image::Load("./image/marble.png").get());
     m_planeMaterial->specular = grayTexture;
-    m_planeMaterial->shininess = 128.0f;
+    m_planeMaterial->shininess = 32.0f;
 
     m_box1Material = Material::Create();
     m_box1Material->diffuse = Texture::CreateFromImage(Image::Load("./image/container.jpg").get());
@@ -201,6 +201,7 @@ void Context::Render() {
             ImGui::ColorEdit3("l.diffuse", glm::value_ptr(m_light.diffuse));
             ImGui::ColorEdit3("l.specular", glm::value_ptr(m_light.specular));
             ImGui::Checkbox("flash light", &m_flashLightMode);
+            ImGui::Checkbox("l.blinn", &m_blinn);
         }
         ImGui::Checkbox("animation", &m_animation);
         ImGui::Checkbox("depth test", &m_depthTest);
@@ -280,6 +281,7 @@ void Context::Render() {
     m_program->SetUniform("light.ambient", m_light.ambient);
     m_program->SetUniform("light.diffuse", m_light.diffuse);
     m_program->SetUniform("light.specular", m_light.specular);
+    m_program->SetUniform("blinn", (m_blinn ? 1 : 0));
     
     //plane
     auto modelTransform =
@@ -291,19 +293,19 @@ void Context::Render() {
     m_planeMaterial->SetToProgram(m_program.get());
     m_box->Draw(m_program.get());
 
-    // envmap cube
-    modelTransform =
-	    glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 0.75f, -2.0f)) *
-	    glm::rotate(glm::mat4(1.0f), glm::radians(40.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
-	    glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
-	m_envMapProgram->Use();
-	m_envMapProgram->SetUniform("model", modelTransform);
-	m_envMapProgram->SetUniform("view", view);
-	m_envMapProgram->SetUniform("projection", projection);
-	m_envMapProgram->SetUniform("cameraPos", m_cameraPos);
-	m_cubeTexture->Bind();
-	m_envMapProgram->SetUniform("skybox", 0);
-	m_box->Draw(m_envMapProgram.get());
+    // // envmap cube
+    // modelTransform =
+	//     glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 0.75f, -2.0f)) *
+	//     glm::rotate(glm::mat4(1.0f), glm::radians(40.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
+	//     glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
+	// m_envMapProgram->Use();
+	// m_envMapProgram->SetUniform("model", modelTransform);
+	// m_envMapProgram->SetUniform("view", view);
+	// m_envMapProgram->SetUniform("projection", projection);
+	// m_envMapProgram->SetUniform("cameraPos", m_cameraPos);
+	// m_cubeTexture->Bind();
+	// m_envMapProgram->SetUniform("skybox", 0);
+	// m_box->Draw(m_envMapProgram.get());
 
     // box1
     modelTransform =
@@ -352,18 +354,18 @@ void Context::Render() {
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
     glStencilMask(0xFF);
 
-    // grass
-    glEnable(GL_BLEND);
-    glDisable(GL_CULL_FACE);
-    m_grassProgram->Use();
-    m_grassProgram->SetUniform("tex", 0);
-    m_grassTexture->Bind();
-    m_grassInstance->Bind();
-    modelTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.5f, 0.0f));
-    transform = projection * view * modelTransform;
-    m_grassProgram->SetUniform("transform", transform);
-    glDrawElementsInstanced(GL_TRIANGLES, m_plane->GetIndexBuffer()->GetCount(),
-        GL_UNSIGNED_INT, 0, m_grassPosBuffer->GetCount());
+    // // grass
+    // glEnable(GL_BLEND);
+    // glDisable(GL_CULL_FACE);
+    // m_grassProgram->Use();
+    // m_grassProgram->SetUniform("tex", 0);
+    // m_grassTexture->Bind();
+    // m_grassInstance->Bind();
+    // modelTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.5f, 0.0f));
+    // transform = projection * view * modelTransform;
+    // m_grassProgram->SetUniform("transform", transform);
+    // glDrawElementsInstanced(GL_TRIANGLES, m_plane->GetIndexBuffer()->GetCount(),
+    //     GL_UNSIGNED_INT, 0, m_grassPosBuffer->GetCount());
 
     // blending
     glEnable(GL_BLEND);
