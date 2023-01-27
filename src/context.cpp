@@ -144,29 +144,7 @@ bool Context::Init() {
 	    cubeBack.get(),
 	});
 
-    // grass
-    m_grassTexture = Texture::CreateFromImage(Image::Load("./image/grass.png").get());
-    m_grassProgram = Program::Create("./shader/grass.vs", "./shader/grass.fs");
-    m_grassPos.resize(10000);
-    for (size_t i = 0; i < m_grassPos.size(); i++) {
-        m_grassPos[i].x = ((float)rand() / (float)RAND_MAX * 2.0f - 1.0f) * 5.0f;
-        m_grassPos[i].z = ((float)rand() / (float)RAND_MAX * 2.0f - 1.0f) * 5.0f;
-        m_grassPos[i].y = glm::radians((float)rand() / (float)RAND_MAX * 360.0f);
-    }
-
-    m_grassInstance = VertexLayout::Create();
-    m_grassInstance->Bind();
-    m_plane->GetVertexBuffer()->Bind();
-    m_grassInstance->SetAttrib(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
-    m_grassInstance->SetAttrib(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), offsetof(Vertex, normal));
-    m_grassInstance->SetAttrib(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), offsetof(Vertex, texCoord));
-    
-    m_grassPosBuffer = Buffer::CreateWithData(GL_ARRAY_BUFFER, GL_STATIC_DRAW,
-        m_grassPos.data(), sizeof(glm::vec3), m_grassPos.size());
-    m_grassPosBuffer->Bind();
-    m_grassInstance->SetAttrib(3, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), 0);
-    glVertexAttribDivisor(3, 1);
-    m_plane->GetIndexBuffer()->Bind();
+    m_shadowMap = ShadowMap::Create(1024, 1024);
 
     return true;
 }
@@ -206,12 +184,29 @@ void Context::Render() {
         ImGui::Checkbox("animation", &m_animation);
         ImGui::Checkbox("depth test", &m_depthTest);
 
-        float aspectRatio = (float)m_width / (float)m_height;
-        // ImGui::Image((void*)m_framebuffer->GetColorAttachment()->Get(),
-        ImGui::Image((ImTextureID)m_framebuffer->GetColorAttachment()->Get(),
-            ImVec2(150 * aspectRatio, 150));
+        ImGui::Image((ImTextureID)m_shadowMap->GetShadowMap()->Get(),
+            ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
     }
     ImGui::End();
+
+    auto lightView = glm::lookAt(m_light.position,
+        m_light.position + m_light.direction,
+        glm::vec3(0.0f, 1.0f, 0.0f));
+    auto lightProjection = glm::perspective(
+        glm::radians((m_light.cutoff[0] + m_light.cutoff[1]) * 2.0f),
+        1.0f, 1.0f, 20.0f);
+
+    m_shadowMap->Bind();
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glViewport(0, 0,
+        m_shadowMap->GetShadowMap()->GetWidth(),
+        m_shadowMap->GetShadowMap()->GetHeight());
+    m_simpleProgram->Use();
+    m_simpleProgram->SetUniform("color", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+    DrawScene(lightView, lightProjection, m_simpleProgram.get());
+
+    Framebuffer::BindToDefault();
+    glViewport(0, 0, m_width, m_height);
 
     m_framebuffer->Bind();
 
@@ -283,116 +278,7 @@ void Context::Render() {
     m_program->SetUniform("light.specular", m_light.specular);
     m_program->SetUniform("blinn", (m_blinn ? 1 : 0));
     
-    //plane
-    auto modelTransform =
-        glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -0.5f, 0.0f)) *
-        glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 1.0f, 10.0f));
-    auto transform = projection * view * modelTransform;
-    m_program->SetUniform("transform", transform);
-    m_program->SetUniform("modelTransform", modelTransform);
-    m_planeMaterial->SetToProgram(m_program.get());
-    m_box->Draw(m_program.get());
-
-    // // envmap cube
-    // modelTransform =
-	//     glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 0.75f, -2.0f)) *
-	//     glm::rotate(glm::mat4(1.0f), glm::radians(40.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
-	//     glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
-	// m_envMapProgram->Use();
-	// m_envMapProgram->SetUniform("model", modelTransform);
-	// m_envMapProgram->SetUniform("view", view);
-	// m_envMapProgram->SetUniform("projection", projection);
-	// m_envMapProgram->SetUniform("cameraPos", m_cameraPos);
-	// m_cubeTexture->Bind();
-	// m_envMapProgram->SetUniform("skybox", 0);
-	// m_box->Draw(m_envMapProgram.get());
-
-    // box1
-    modelTransform =
-        glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, 0.75f, -4.0f)) *
-        glm::rotate(glm::mat4(1.0f), glm::radians(30.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
-        glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
-    transform = projection * view * modelTransform;
-    m_program->Use();
-    m_program->SetUniform("transform", transform);
-    m_program->SetUniform("modelTransform", modelTransform);
-    m_box1Material->SetToProgram(m_program.get());
-    m_box->Draw(m_program.get());
-
-    // box2
-    glEnable(GL_STENCIL_TEST);
-    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-    glStencilFunc(GL_ALWAYS, 1, 0xFF);
-    glStencilMask(0xFF);
-
-    modelTransform =
-        glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.75f, 2.0f)) *
-        glm::rotate(glm::mat4(1.0f), glm::radians(20.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * 
-        glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
-    transform = projection * view * modelTransform;
-    m_program->Use();
-    m_program->SetUniform("transform", transform);
-    m_program->SetUniform("modelTransform", modelTransform);
-    m_box2Material->SetToProgram(m_program.get());
-    m_box->Draw(m_program.get());
-
-    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-    glStencilMask(0x00);
-    if (!m_depthTest){
-        glDisable(GL_DEPTH_TEST);
-    }
-    
-    // box2 stencil
-    m_simpleProgram->Use();
-    m_simpleProgram->SetUniform("color", glm::vec4(1.0f, 1.0f, 0.5f, 1.0f));
-    m_simpleProgram->SetUniform(
-        "transform", transform * glm::scale(glm::mat4(1.0f), glm::vec3(1.05f, 1.05f, 1.05f)));
-    m_box->Draw(m_simpleProgram.get());
-
-    glEnable(GL_DEPTH_TEST);
-    glDisable(GL_STENCIL_TEST);
-    glStencilFunc(GL_ALWAYS, 1, 0xFF);
-    glStencilMask(0xFF);
-
-    // // grass
-    // glEnable(GL_BLEND);
-    // glDisable(GL_CULL_FACE);
-    // m_grassProgram->Use();
-    // m_grassProgram->SetUniform("tex", 0);
-    // m_grassTexture->Bind();
-    // m_grassInstance->Bind();
-    // modelTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.5f, 0.0f));
-    // transform = projection * view * modelTransform;
-    // m_grassProgram->SetUniform("transform", transform);
-    // glDrawElementsInstanced(GL_TRIANGLES, m_plane->GetIndexBuffer()->GetCount(),
-    //     GL_UNSIGNED_INT, 0, m_grassPosBuffer->GetCount());
-
-    // blending
-    glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	
-	m_textureProgram->Use();
-	m_windowTexture->Bind();
-	m_textureProgram->SetUniform("tex", 0);
-	
-	modelTransform =
-		glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.5f, 4.0f));
-	transform = projection * view * modelTransform;
-	m_textureProgram->SetUniform("transform", transform);
-	m_plane->Draw(m_textureProgram.get());
-
-    modelTransform =
-		glm::translate(glm::mat4(1.0f), glm::vec3(0.2f, 0.5f, 5.0f));
-	transform = projection * view * modelTransform;
-	m_textureProgram->SetUniform("transform", transform);
-	m_plane->Draw(m_textureProgram.get());
-	
-	modelTransform =
-		glm::translate(glm::mat4(1.0f), glm::vec3(0.4f, 0.5f, 6.0f));
-	transform = projection * view * modelTransform;
-	m_textureProgram->SetUniform("transform", transform);
-	m_plane->Draw(m_textureProgram.get());
-    glDisable(GL_BLEND);
+    DrawScene(view, projection, m_program.get());
     
     Framebuffer::BindToDefault();
 
@@ -405,4 +291,48 @@ void Context::Render() {
     m_postProgram->SetUniform("tex", 0);
     m_postProgram->SetUniform("gamma", m_gamma);
     m_plane->Draw(m_postProgram.get()); 
+}
+
+void Context::DrawScene(const glm::mat4& view, const glm::mat4& projection, Program* program) {
+	
+	program->Use();
+
+	auto modelTransform =
+		glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -0.5f, 0.0f)) *
+		glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 1.0f, 10.0f));
+	auto transform = projection * view * modelTransform;
+	program->SetUniform("transform", transform);
+	program->SetUniform("modelTransform", modelTransform);
+	m_planeMaterial->SetToProgram(program);
+	m_box->Draw(program);
+	
+	modelTransform =
+		glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, 0.75f, -4.0f)) *
+		glm::rotate(glm::mat4(1.0f), glm::radians(30.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
+		glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
+	transform = projection * view * modelTransform;
+	program->SetUniform("transform", transform);
+	program->SetUniform("modelTransform", modelTransform);
+	m_box1Material->SetToProgram(program);
+	m_box->Draw(program);
+	
+	modelTransform =
+		glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.75f, 2.0f)) *
+		glm::rotate(glm::mat4(1.0f), glm::radians(20.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
+		glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
+	transform = projection * view * modelTransform;
+	program->SetUniform("transform", transform);
+	program->SetUniform("modelTransform", modelTransform);
+	m_box2Material->SetToProgram(program);
+	m_box->Draw(program);
+	
+	modelTransform =
+		glm::translate(glm::mat4(1.0f), glm::vec3(3.0f, 1.75f, -2.0f)) *
+		glm::rotate(glm::mat4(1.0f), glm::radians(50.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
+		glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
+	transform = projection * view * modelTransform;
+	program->SetUniform("transform", transform);
+	program->SetUniform("modelTransform", modelTransform);
+	m_box2Material->SetToProgram(program);
+	m_box->Draw(program);
 }
