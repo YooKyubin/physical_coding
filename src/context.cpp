@@ -173,6 +173,7 @@ void Context::Render() {
             m_cameraPos = glm::vec3(0.0f, 2.5f, 8.0f);
         }
         if (ImGui::CollapsingHeader("light", ImGuiTreeNodeFlags_DefaultOpen)) {
+            ImGui::Checkbox("l.directional", &m_light.directional);
             ImGui::DragFloat3("l.position", glm::value_ptr(m_light.position), 0.01f);
             ImGui::DragFloat3("l.direction", glm::value_ptr(m_light.direction), 0.01f);
             ImGui::DragFloat("l.cutoff_inner", &m_light.cutoff[0], 0.5f, 0.0f, 150.0f);
@@ -184,8 +185,6 @@ void Context::Render() {
             ImGui::Checkbox("flash light", &m_flashLightMode);
             ImGui::Checkbox("l.blinn", &m_blinn);
         }
-        ImGui::Checkbox("animation", &m_animation);
-        ImGui::Checkbox("depth test", &m_depthTest);
 
         ImGui::Image((ImTextureID)m_shadowMap->GetShadowMap()->Get(),
             ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
@@ -195,9 +194,10 @@ void Context::Render() {
     auto lightView = glm::lookAt(m_light.position,
         m_light.position + m_light.direction,
         glm::vec3(0.0f, 1.0f, 0.0f));
-    auto lightProjection = glm::perspective(
-        glm::radians((m_light.cutoff[0] + m_light.cutoff[1]) * 2.0f),
-        1.0f, 1.0f, 20.0f);
+    auto lightProjection = m_light.directional ?
+        glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 1.0f, 30.0f) :
+        glm::perspective(
+            glm::radians((m_light.cutoff[0] + m_light.cutoff[1]) * 2.0f), 1.0f, 1.0f, 20.0f);
 
     m_shadowMap->Bind();
     glClear(GL_DEPTH_BUFFER_BIT);
@@ -206,10 +206,10 @@ void Context::Render() {
         m_shadowMap->GetShadowMap()->GetHeight());
     m_simpleProgram->Use();
     m_simpleProgram->SetUniform("color", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-    // glEnable(GL_CULL_FACE);
-    // glCullFace(GL_FRONT);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
     DrawScene(lightView, lightProjection, m_simpleProgram.get());
-    // glDisable(GL_CULL_FACE);
+    glDisable(GL_CULL_FACE);
 
     Framebuffer::BindToDefault();
     glViewport(0, 0, m_width, m_height);
@@ -270,6 +270,7 @@ void Context::Render() {
     // model
     m_lightingShadowProgram->Use();
 	m_lightingShadowProgram->SetUniform("viewPos", m_cameraPos);
+    m_lightingShadowProgram->SetUniform("light.directional", m_light.directional ? 1 : 0);
 	m_lightingShadowProgram->SetUniform("light.position", m_light.position);
 	m_lightingShadowProgram->SetUniform("light.direction", m_light.direction);
 	m_lightingShadowProgram->SetUniform("light.cutoff", glm::vec2(
