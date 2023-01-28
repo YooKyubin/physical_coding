@@ -103,6 +103,9 @@ bool Context::Init() {
 
     m_envMapProgram = Program::Create("./shader/env_map.vs", "./shader/env_map.fs");
 
+    m_lightingShadowProgram = Program::Create(
+        "./shader/lighting_shadow.vs", "./shader/lighting_shadow.fs");
+
     glClearColor(m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
 
     TexturePtr darkGrayTexture = Texture::CreateFromImage(
@@ -264,21 +267,25 @@ void Context::Render() {
     }
 
     // model
-    m_program->Use();
-
-    m_program->SetUniform("viewPos", m_cameraPos);
-    m_program->SetUniform("light.position", lightPos);
-    m_program->SetUniform("light.direction", lightDir);
-    m_program->SetUniform("light.cutoff", glm::vec2(
-        cosf(glm::radians(m_light.cutoff[0])),
-        cosf(glm::radians(m_light.cutoff[0] + m_light.cutoff[1]))));
-    m_program->SetUniform("light.attenuation",  GetAttenuationCoeff(m_light.distance));
-    m_program->SetUniform("light.ambient", m_light.ambient);
-    m_program->SetUniform("light.diffuse", m_light.diffuse);
-    m_program->SetUniform("light.specular", m_light.specular);
-    m_program->SetUniform("blinn", (m_blinn ? 1 : 0));
-    
-    DrawScene(view, projection, m_program.get());
+    m_lightingShadowProgram->Use();
+	m_lightingShadowProgram->SetUniform("viewPos", m_cameraPos);
+	m_lightingShadowProgram->SetUniform("light.position", m_light.position);
+	m_lightingShadowProgram->SetUniform("light.direction", m_light.direction);
+	m_lightingShadowProgram->SetUniform("light.cutoff", glm::vec2(
+		cosf(glm::radians(m_light.cutoff[0])),
+		cosf(glm::radians(m_light.cutoff[0] + m_light.cutoff[1]))));
+	m_lightingShadowProgram->SetUniform("light.attenuation", GetAttenuationCoeff(m_light.distance));
+	m_lightingShadowProgram->SetUniform("light.ambient", m_light.ambient);
+	m_lightingShadowProgram->SetUniform("light.diffuse", m_light.diffuse);
+	m_lightingShadowProgram->SetUniform("light.specular", m_light.specular);
+	m_lightingShadowProgram->SetUniform("blinn", (m_blinn ? 1 : 0));
+	m_lightingShadowProgram->SetUniform("lightTransform", lightProjection * lightView);
+	glActiveTexture(GL_TEXTURE3);
+	m_shadowMap->GetShadowMap()->Bind();
+	m_lightingShadowProgram->SetUniform("shadowMap", 3);
+	glActiveTexture(GL_TEXTURE0);
+	
+	DrawScene(view, projection, m_lightingShadowProgram.get());
     
     Framebuffer::BindToDefault();
 
