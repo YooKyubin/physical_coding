@@ -206,7 +206,10 @@ void Context::Render() {
         m_shadowMap->GetShadowMap()->GetHeight());
     m_simpleProgram->Use();
     m_simpleProgram->SetUniform("color", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+    // glEnable(GL_CULL_FACE);
+    // glCullFace(GL_FRONT);
     DrawScene(lightView, lightProjection, m_simpleProgram.get());
+    // glDisable(GL_CULL_FACE);
 
     Framebuffer::BindToDefault();
     glViewport(0, 0, m_width, m_height);
@@ -216,8 +219,6 @@ void Context::Render() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 
-    // glEnable(GL_CULL_FACE);
-    // glCullFace(GL_BACK);
 
     m_cameraFront =
         glm::rotate(glm::mat4(1.0f), glm::radians(m_cameraYaw), glm::vec3(0.0f, 1.0f, 0.0f)) * 
