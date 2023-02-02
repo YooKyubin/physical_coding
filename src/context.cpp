@@ -106,6 +106,8 @@ bool Context::Init() {
     m_lightingShadowProgram = Program::Create(
         "./shader/lighting_shadow.vs", "./shader/lighting_shadow.fs");
 
+    m_normalProgram = Program::Create("./shader/normal.vs", "./shader/normal.fs");
+
     glClearColor(m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
 
     TexturePtr darkGrayTexture = Texture::CreateFromImage(
@@ -149,6 +151,11 @@ bool Context::Init() {
 
     m_shadowMap = ShadowMap::Create(1024, 1024);
 
+    m_brickDiffuseTexture = Texture::CreateFromImage(
+        Image::Load("./image/brickwall.png", false).get());
+	m_brickNormalTexture = Texture::CreateFromImage(
+        Image::Load("./image/brickwall_normal.png", false).get());
+	
     return true;
 }
 
@@ -288,6 +295,23 @@ void Context::Render() {
 	glActiveTexture(GL_TEXTURE0);
 	
 	DrawScene(view, projection, m_lightingShadowProgram.get());
+
+    auto modelTransform =
+		glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 3.0f, 0.0f)) * 
+        glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	m_normalProgram->Use();
+	m_normalProgram->SetUniform("viewPos", m_cameraPos);
+	m_normalProgram->SetUniform("lightPos", m_light.position);
+	glActiveTexture(GL_TEXTURE0);
+	m_brickDiffuseTexture->Bind();
+	m_normalProgram->SetUniform("diffuse", 0);
+	glActiveTexture(GL_TEXTURE1);
+	m_brickNormalTexture->Bind();
+	m_normalProgram->SetUniform("normalMap", 1);
+	glActiveTexture(GL_TEXTURE0);
+	m_normalProgram->SetUniform("modelTransform", modelTransform);
+	m_normalProgram->SetUniform("transform", projection * view * modelTransform);
+	m_plane->Draw(m_normalProgram.get());
     
     Framebuffer::BindToDefault();
 
