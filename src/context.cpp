@@ -36,7 +36,7 @@ void Context::Reshape(int width, int height) {
     m_width = width;
     m_height = height;
     glViewport(0, 0, m_width, m_height);
-    m_framebuffer = Framebuffer::Create(Texture::Create(width, height, GL_RGBA));
+    m_framebuffer = Framebuffer::Create({ Texture::Create(width, height, GL_RGBA), });
 }
 
 void Context::MouseMove(double x, double y) {
