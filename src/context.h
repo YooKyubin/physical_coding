@@ -123,6 +123,7 @@ private:
 	FramebufferUPtr m_ssaoFramebuffer;
 	ProgramUPtr m_ssaoProgram;
 	ModelUPtr m_model;  // for test rendering
+    TextureUPtr m_ssaoNoiseTexture;
 };
 
 #endif // __CONTEXT_H__
