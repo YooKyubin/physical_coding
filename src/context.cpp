@@ -141,10 +141,19 @@ void Context::Render() {
 	m_pbrProgram->SetUniform("material.albedo", m_material.albedo);
 	m_pbrProgram->SetUniform("material.ao", m_material.ao);
 	for (size_t i = 0; i < m_lights.size(); i++) {
+		m_pbrProgram->Use();
 	    auto posName = fmt::format("lights[{}].position", i);
 	    auto colorName = fmt::format("lights[{}].color", i);
 	    m_pbrProgram->SetUniform(posName, m_lights[i].position);
 	    m_pbrProgram->SetUniform(colorName, m_lights[i].color);
+		
+		auto lightTransform = projection * view * 
+			glm::translate(glm::mat4(1.0f), m_lights[i].position) *
+			glm::scale(glm::mat4(1.0f), glm::vec3(0.4f));
+		m_simpleProgram->Use();
+		m_simpleProgram->SetUniform("color", glm::vec4(m_lights[i].color, 1.0f));
+		m_simpleProgram->SetUniform("transform", lightTransform);
+		m_box->Draw(m_simpleProgram.get());
 	}
 	DrawScene(view, projection, m_pbrProgram.get());
 }
