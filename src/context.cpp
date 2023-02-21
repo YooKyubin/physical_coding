@@ -84,6 +84,7 @@ bool Context::Init() {
 	m_pbrProgram = Program::Create("./shader/pbr.vs", "./shader/pbr.fs");
 	// m_pbrProgram = Program::Create("./shader/pbr_texture.vs", "./shader/pbr_texture.fs");
 	m_sphericalMapProgram = Program::Create("./shader/spherical_map.vs", "./shader/spherical_map.fs");
+	m_skyboxProgram = Program::Create("./shader/skybox_hdr.vs", "./shader/skybox_hdr.fs");
 
 	// m_material.albedo = Texture::CreateFromImage(Image::Load("./image/rustediron2_basecolor.png").get());
 	// m_material.roughness = Texture::CreateFromImage(Image::Load("./image/rustediron2_roughness.png").get());
@@ -95,6 +96,33 @@ bool Context::Init() {
 	m_lights.push_back({ glm::vec3(-4.0f, 5.0f, 7.0f), glm::vec3(40.0f, 40.0f, 40.0f) });
 	m_lights.push_back({ glm::vec3(-4.0f, -6.0f, 8.0f), glm::vec3(40.0f, 40.0f, 40.0f) });
 	m_lights.push_back({ glm::vec3(5.0f, -6.0f, 9.0f), glm::vec3(40.0f, 40.0f, 40.0f) });
+
+	
+	m_hdrCubeMap = CubeTexture::Create(512, 512, GL_RGB16F, GL_FLOAT);
+	auto cubeFramebuffer = CubeFramebuffer::Create(m_hdrCubeMap);
+	auto projection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
+	std::vector<glm::mat4> views = {
+	    glm::lookAt(glm::vec3(0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+	    glm::lookAt(glm::vec3(0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+	    glm::lookAt(glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+	    glm::lookAt(glm::vec3(0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
+	    glm::lookAt(glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+		glm::lookAt(glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+	};
+	m_sphericalMapProgram->Use();
+	m_sphericalMapProgram->SetUniform("tex", 0);
+	m_hdrMap->Bind();
+	glViewport(0, 0, 512, 512);
+	for (int i = 0; i < (int)views.size(); i++) {
+		cubeFramebuffer->Bind(i);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		m_sphericalMapProgram->SetUniform("transform", projection * views[i]);
+		m_box->Draw(m_sphericalMapProgram.get());
+	}
+
+	Framebuffer::BindToDefault();
+	glViewport(0, 0, m_width, m_height);
+
 	return true;
 }
 
@@ -187,6 +215,15 @@ void Context::Render() {
 	m_sphericalMapProgram->SetUniform("tex", 0);
 	m_hdrMap->Bind();
 	m_box->Draw(m_sphericalMapProgram.get());
+
+	glDepthFunc(GL_LEQUAL);
+	m_skyboxProgram->Use();
+	m_skyboxProgram->SetUniform("projection", projection);
+	m_skyboxProgram->SetUniform("view", view);
+	m_skyboxProgram->SetUniform("cubeMap", 0);
+	m_hdrCubeMap->Bind();
+	m_box->Draw(m_skyboxProgram.get());
+	glDepthFunc(GL_LESS);
 }
 
 // void Context::DrawScene(const glm::mat4& view, const glm::mat4& projection, const Program* program) {

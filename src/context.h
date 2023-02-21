@@ -61,6 +61,8 @@ private:
 
 	TextureUPtr m_hdrMap;
 	ProgramUPtr m_sphericalMapProgram;
+	CubeTexturePtr m_hdrCubeMap;
+	ProgramUPtr m_skyboxProgram;
 	
 	// screen size
 	int m_width {640};
