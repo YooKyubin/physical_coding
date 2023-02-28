@@ -211,7 +211,7 @@ void Context::Render() {
 			ImGui::SliderFloat("mat.metallic", &m_material.metallic, 0.0f, 1.0f);
 			ImGui::SliderFloat("mat.ao", &m_material.ao, 0.0f, 1.0f);
 		}
-		ImGui::Checkbox("use irradiance", &m_useDiffuseIrradiance);
+		ImGui::Checkbox("use IBL", &m_useIBL);
 
 		float w = ImGui::GetContentRegionAvailWidth();
 		ImGui::Image((ImTextureID)m_brdfLookupMap->Get(), ImVec2(w, w));
@@ -237,23 +237,17 @@ void Context::Render() {
 	m_pbrProgram->SetUniform("viewPos", m_cameraPos);
 	m_pbrProgram->SetUniform("material.albedo", m_material.albedo);
 	m_pbrProgram->SetUniform("material.ao", m_material.ao);
-	m_pbrProgram->SetUniform("useIrradiance", m_useDiffuseIrradiance ? 1 : 0);
+	m_pbrProgram->SetUniform("useIBL", m_useIBL ? 1 : 0);
 	m_pbrProgram->SetUniform("irradianceMap", 0);
+	m_pbrProgram->SetUniform("preFilteredMap", 1);
+	m_pbrProgram->SetUniform("brdfLookupTable", 2);
+	glActiveTexture(GL_TEXTURE0);
 	m_diffuseIrradianceMap->Bind();
-	
-	// m_pbrProgram->SetUniform("material.albedo", 0);  
-	// m_pbrProgram->SetUniform("material.roughness", 1);  
-	// m_pbrProgram->SetUniform("material.metallic", 2);  
-	// m_pbrProgram->SetUniform("material.normal", 3);  
-	// glActiveTexture(GL_TEXTURE0);  
-	// m_material.albedo->Bind();  
-	// glActiveTexture(GL_TEXTURE1);  
-	// m_material.roughness->Bind();  
-	// glActiveTexture(GL_TEXTURE2);  
-	// m_material.metallic->Bind();  
-	// glActiveTexture(GL_TEXTURE3);  
-	// m_material.normal->Bind();  
-	// glActiveTexture(GL_TEXTURE0);
+	glActiveTexture(GL_TEXTURE1);
+	m_preFilteredMap->Bind();
+	glActiveTexture(GL_TEXTURE2);
+	m_brdfLookupMap->Bind();
+	glActiveTexture(GL_TEXTURE0);
 
 	for (size_t i = 0; i < m_lights.size(); i++) {
 		m_pbrProgram->Use();
@@ -286,9 +280,9 @@ void Context::Render() {
 	m_skyboxProgram->SetUniform("view", view);
 	m_skyboxProgram->SetUniform("cubeMap", 0);
 	m_skyboxProgram->SetUniform("roughness", m_material.roughness);
-	// m_hdrCubeMap->Bind();
+	m_hdrCubeMap->Bind();
 	// m_diffuseIrradianceMap->Bind();
-	m_preFilteredMap->Bind();
+	// m_preFilteredMap->Bind();
 	m_box->Draw(m_skyboxProgram.get());
 	glDepthFunc(GL_LESS);
 }
