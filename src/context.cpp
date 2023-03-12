@@ -115,14 +115,18 @@ bool Context::Init() {
 		m_box.get(), m_simpleProgram.get(), 
 		glm::vec3(1.0f),
 		glm::vec3(1.0f, 0.5f, 0.0f),
-		glm::vec3(-0.1f, 0.0f, 0.0f),
+		glm::vec3(-2.0f, 0.0f, 0.0f),
 		glm::vec3(0.0f),
 		glm::vec3(1.0f, 0.01f, 0.31f)
 	);
 	ball->m_position.x = 10.0f;
+	ball->m_acc.x = 0.1f;
 
 	plane = Matter::Create(m_box.get(), m_simpleProgram.get());
 	plane->m_size = glm::vec3(10.0f, 0.3f, 10.0f);
+
+	ball2 = Matter::Create(m_box.get(), m_simpleProgram.get());
+	ball2->m_position = glm::vec3(-10.0f, 0.5f, -0.1f);
 
 	return true;
 }
@@ -177,20 +181,23 @@ void Context::Render() {
 	accumulator += frameTime;
 
 	// 고정된 시간 간격으로 시뮬레이션 상태 업데이트
+	int log = 0;
 	while (accumulator >= timeStep)
 	{
+		++log;
 		// 시간 간격 크기를 사용하여 시뮬레이션 업데이트
-		SPDLOG_INFO("time step : {}", timeStep);
-		ball->m_position += ball->m_velocity;
+		ball->m_velocity += ball->m_acc * (float)timeStep;
+		ball->m_position += ball->m_velocity * (float)timeStep;
 
 		// 누적 변수에서 시간 간격 크기를 뺌
 		accumulator -= timeStep;
 	}
-
-	SPDLOG_INFO("render scene");
+	SPDLOG_INFO("cnt: {}", log);
 
 	ball->Draw(view, projection);
 	plane->Draw(view, projection);
+	ball2->Draw(view, projection);
+
 }
 
 // void Context::DrawScene(const glm::mat4& view, const glm::mat4& projection, const Program* program) {

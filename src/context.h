@@ -59,15 +59,16 @@ private:
 	float m_cameraPitch { 0.0f };
 	float m_cameraYaw { 0.0f };
 	glm::vec3 m_cameraFront { glm::vec3(0.0f, -1.0f, 0.0f) };
-	glm::vec3 m_cameraPos { glm::vec3(0.0f, 0.0f, 8.0f) };
+	glm::vec3 m_cameraPos { glm::vec3(0.0f, 0.0f, 40.0f) };
 	glm::vec3 m_cameraUp { glm::vec3(0.0f, 1.0f, 0.0f) };
 
-	const double timeStep = 1.0 / 10.0; // 60fps
+	const double timeStep = 1.0 / 60.0; // 60fps
 	double currentTime;
     double accumulator;
 
 	MatterUPtr ball;
 	MatterUPtr plane;
+	MatterUPtr ball2;
 };
 
 #endif // __CONTEXT_H__
