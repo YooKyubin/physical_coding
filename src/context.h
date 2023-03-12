@@ -11,6 +11,7 @@
 #include "model.h"
 #include "framebuffer.h"
 #include "shadow_map.h"
+#include "matter.h"
 
 
 CLASS_PTR(Context)
@@ -32,7 +33,8 @@ private:
 	bool Init();
 	
 	ProgramUPtr m_simpleProgram;
-	ProgramUPtr m_pbrProgram;
+	ProgramUPtr m_shadowmapProgram;
+	ProgramUPtr m_lightProgram;
 	
 	MeshUPtr m_box;
 	MeshUPtr m_plane;
@@ -43,33 +45,9 @@ private:
 	    glm::vec3 color { glm::vec3(1.0f, 1.0f, 1.0f) };
 	};
 	std::vector<Light> m_lights;
-	bool m_useIBL { true };
-	
-	struct Material {
-	    glm::vec3 albedo { glm::vec3(1.0f, 1.0f, 1.0f) };
-	    float roughness { 0.5f };
-	    float metallic { 0.5f };
-	    float ao { 0.1f };
-	};
-    // struct Material {
-	//     TexturePtr albedo;
-	//     TexturePtr roughness;
-	//     TexturePtr metallic;
-	//     TexturePtr normal;
-	//     float ao { 0.1f };
-	// };
-	Material m_material;
+	Light m_light;
 
-	TextureUPtr m_hdrMap;
-	ProgramUPtr m_sphericalMapProgram;
-	CubeTexturePtr m_hdrCubeMap;
-	ProgramUPtr m_skyboxProgram;
-	CubeTexturePtr m_diffuseIrradianceMap;
-	ProgramUPtr m_diffuseIrradianceProgram;
-	CubeTexturePtr m_preFilteredMap;
-	ProgramUPtr m_preFilteredProgram;
-	TexturePtr m_brdfLookupMap;
-	ProgramUPtr m_brdfLookupProgram;
+	MaterialUPtr m_material;
 	
 	// screen size
 	int m_width {640};
@@ -83,6 +61,13 @@ private:
 	glm::vec3 m_cameraFront { glm::vec3(0.0f, -1.0f, 0.0f) };
 	glm::vec3 m_cameraPos { glm::vec3(0.0f, 0.0f, 8.0f) };
 	glm::vec3 m_cameraUp { glm::vec3(0.0f, 1.0f, 0.0f) };
+
+	const double timeStep = 1.0 / 10.0; // 60fps
+	double currentTime;
+    double accumulator;
+
+	MatterUPtr ball;
+	MatterUPtr plane;
 };
 
 #endif // __CONTEXT_H__
