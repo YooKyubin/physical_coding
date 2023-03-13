@@ -23,17 +23,13 @@ public:
 	void Reshape(int width, int height);
 	void MouseMove(double x, double y);
 	void MouseButton(int button, int action, double x, double y);
-	
-	void DrawScene(const glm::mat4& view,
-	    const glm::mat4& projection,
-	    Program* program);
 
 private:
 	Context() {}
 	bool Init();
 	
 	ProgramUPtr m_simpleProgram;
-	ProgramUPtr m_shadowmapProgram;
+	ProgramUPtr m_directLightProgram;
 	ProgramUPtr m_lightProgram;
 	
 	MeshUPtr m_box;
@@ -62,7 +58,7 @@ private:
 	glm::vec3 m_cameraPos { glm::vec3(0.0f, 0.0f, 40.0f) };
 	glm::vec3 m_cameraUp { glm::vec3(0.0f, 1.0f, 0.0f) };
 
-	const double timeStep = 1.0 / 60.0; // 60fps
+	const double timeStep = 1.0 / 50.0; // 60fps
 	double currentTime;
     double accumulator;
 

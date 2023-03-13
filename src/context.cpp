@@ -83,26 +83,8 @@ bool Context::Init() {
 	
 	m_simpleProgram = Program::Create("./shader/simple.vs", "./shader/simple.fs");
 	m_lightProgram = Program::Create("./shader/lighting.vs", "./shader/lighting.fs");
-
-	// m_material.albedo = Texture::CreateFromImage(Image::Load("./image/rustediron2_basecolor.png").get());
-	// m_material.roughness = Texture::CreateFromImage(Image::Load("./image/rustediron2_roughness.png").get());
-	// m_material.metallic = Texture::CreateFromImage(Image::Load("./image/rustediron2_metallic.png").get());
-	// m_material.normal = Texture::CreateFromImage(Image::Load("./image/rustediron2_normal.png").get());
+	m_directLightProgram = Program::Create("./shader/lighting.vs", "./shader/direct_lighting.fs");
  
-	m_lights.push_back({ glm::vec3(5.0f, 5.0f, 6.0f), glm::vec3(40.0f, 40.0f, 40.0f) });
-	m_lights.push_back({ glm::vec3(-4.0f, 5.0f, 7.0f), glm::vec3(40.0f, 40.0f, 40.0f) });
-	m_lights.push_back({ glm::vec3(-4.0f, -6.0f, 8.0f), glm::vec3(40.0f, 40.0f, 40.0f) });
-	m_lights.push_back({ glm::vec3(5.0f, -6.0f, 9.0f), glm::vec3(40.0f, 40.0f, 40.0f) });
-
-	auto projection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
-	std::vector<glm::mat4> views = {
-	    glm::lookAt(glm::vec3(0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-	    glm::lookAt(glm::vec3(0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-	    glm::lookAt(glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
-	    glm::lookAt(glm::vec3(0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
-	    glm::lookAt(glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-		glm::lookAt(glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-	};
 
 	Framebuffer::BindToDefault();
 	glViewport(0, 0, m_width, m_height);
@@ -112,7 +94,7 @@ bool Context::Init() {
     accumulator = 0.0;
 
 	ball = Matter::Create(
-		m_box.get(), m_simpleProgram.get(), 
+		m_sphere.get(), m_directLightProgram.get(), 
 		glm::vec3(1.0f),
 		glm::vec3(1.0f, 0.5f, 0.0f),
 		glm::vec3(-2.0f, 0.0f, 0.0f),
@@ -122,10 +104,10 @@ bool Context::Init() {
 	ball->m_position.x = 10.0f;
 	ball->m_acc.x = 0.1f;
 
-	plane = Matter::Create(m_box.get(), m_simpleProgram.get());
+	plane = Matter::Create(m_box.get(), m_directLightProgram.get());
 	plane->m_size = glm::vec3(10.0f, 0.3f, 10.0f);
 
-	ball2 = Matter::Create(m_box.get(), m_simpleProgram.get());
+	ball2 = Matter::Create(m_box.get(), m_directLightProgram.get());
 	ball2->m_position = glm::vec3(-10.0f, 0.5f, -0.1f);
 
 	return true;
@@ -143,13 +125,6 @@ void Context::Render() {
 			m_cameraYaw = 0.0f;
 			m_cameraPitch = 0.0f;
 			m_cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-		}
-
-		if (ImGui::CollapsingHeader("lights")) {
-			static int lightIndex = 0;
-			ImGui::DragInt("light.index", &lightIndex, 1.0f, 0, (int)m_lights.size() - 1);
-			ImGui::DragFloat3("light.pos", glm::value_ptr(m_lights[lightIndex].position), 0.01f);
-			ImGui::DragFloat3("light.color", glm::value_ptr(m_lights[lightIndex].color), 0.1f);
 		}
 
 	}
@@ -198,30 +173,4 @@ void Context::Render() {
 	plane->Draw(view, projection);
 	ball2->Draw(view, projection);
 
-}
-
-// void Context::DrawScene(const glm::mat4& view, const glm::mat4& projection, const Program* program) {
-void Context::DrawScene(const glm::mat4& view,
-	const glm::mat4& projection,
-	Program* program) {
-
-	program->Use();
-	
-	const int sphereCount = 7;
-	const float offset = 1.2f;
-	for (int j = 0; j < sphereCount; j++) {
-	    float y = ((float)j - (float)(sphereCount - 1) * 0.5f) * offset;
-	    for (int i = 0; i < sphereCount; i++) {
-			float x = ((float)i - (float)(sphereCount - 1) * 0.5f) * offset;
-			auto modelTransform =
-				glm::translate(glm::mat4(1.0f), glm::vec3(x, y, 0.0f));
-			auto transform = projection * view * modelTransform;
-			program->SetUniform("transform", transform);
-			program->SetUniform("modelTransform", modelTransform);
-			program->SetUniform("material.roughness", (float)(i + 1) / (float)sphereCount);
-			program->SetUniform("material.metallic", (float)(j + 1) / (float)sphereCount);
-			m_sphere->Draw(program);
-			m_sphere->Draw(program);
-		}
-	}
 }
