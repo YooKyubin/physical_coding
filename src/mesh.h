@@ -62,6 +62,7 @@ private:
 		uint32_t primitiveType);
 
 	uint32_t m_primitiveType { GL_TRIANGLES };
+	// uint32_t m_primitiveType { GL_LINE_STRIP };
 	VertexLayoutUPtr m_vertexLayout;
 	BufferPtr m_vertexBuffer;
 	BufferPtr m_indexBuffer;

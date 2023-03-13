@@ -33,7 +33,7 @@ void Matter::Init(
     m_color = color;
 }
 
-void Matter::Draw(const glm::mat4& view, const glm::mat4& projection){
+void Matter::Draw(const glm::mat4& view, const glm::mat4& projection, const glm::vec3& viewPos){
     glm::vec3 direction = glm::vec3(0.5f, 1.0f, 0.5f);
     m_program->Use();
     auto modelTransform = 
@@ -45,5 +45,6 @@ void Matter::Draw(const glm::mat4& view, const glm::mat4& projection){
     m_program->SetUniform("modelTransform", modelTransform);
     m_program->SetUniform("color", m_color);
     m_program->SetUniform("direction", direction);
+    m_program->SetUniform("viewPos", viewPos);
     m_mesh->Draw(m_program);
 }

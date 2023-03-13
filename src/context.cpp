@@ -127,6 +127,9 @@ void Context::Render() {
 			m_cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 		}
 
+		ImGui::Text("current time:: %.2f", currentTime);
+		ImGui::DragFloat3("ball pos", glm::value_ptr(ball->m_position), 0.0f);
+
 	}
 	ImGui::End();
 
@@ -169,8 +172,9 @@ void Context::Render() {
 	}
 	SPDLOG_INFO("cnt: {}", log);
 
-	ball->Draw(view, projection);
-	plane->Draw(view, projection);
-	ball2->Draw(view, projection);
+	ball->Draw(view, projection, m_cameraPos);
+	plane->Draw(view, projection, m_cameraPos);
+	ball2->Draw(view, projection, m_cameraPos);
+
 
 }

@@ -58,7 +58,7 @@ private:
 	glm::vec3 m_cameraPos { glm::vec3(0.0f, 0.0f, 40.0f) };
 	glm::vec3 m_cameraUp { glm::vec3(0.0f, 1.0f, 0.0f) };
 
-	const double timeStep = 1.0 / 50.0; // 60fps
+	const double timeStep = 1.0 / 144.0; // 60fps
 	double currentTime;
     double accumulator;
 

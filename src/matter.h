@@ -17,7 +17,7 @@ public:
         glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f)
     );
 
-    void Draw(const glm::mat4& view, const glm::mat4& projection);
+    void Draw(const glm::mat4& view, const glm::mat4& projection, const glm::vec3& viewPos);
 
     glm::vec3 m_size;
     glm::vec3 m_position;
