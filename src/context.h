@@ -12,6 +12,7 @@
 #include "framebuffer.h"
 #include "shadow_map.h"
 #include "matter.h"
+#include "line.h"
 
 
 CLASS_PTR(Context)
@@ -65,6 +66,8 @@ private:
 	MatterUPtr ball;
 	MatterUPtr plane;
 	MatterUPtr ball2;
+
+	LineUPtr line1;
 };
 
 #endif // __CONTEXT_H__

@@ -27,6 +27,7 @@ add_executable(${PROJECT_NAME}
     src/framebuffer.cpp src/framebuffer.h
     src/shadow_map.cpp src/shadow_map.h
     src/matter.cpp src/matter.h
+    src/line.cpp src/line.h
     )
 
 include(Dependency.cmake)

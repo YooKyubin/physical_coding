@@ -75,6 +75,8 @@ bool Context::Init() {
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
+	line1 = Line::CreateLine(10);
 	
 	m_box = Mesh::CreateBox();
 	m_plane = Mesh::CreatePlane();
@@ -175,6 +177,10 @@ void Context::Render() {
 	ball->Draw(view, projection, m_cameraPos);
 	plane->Draw(view, projection, m_cameraPos);
 	ball2->Draw(view, projection, m_cameraPos);
+	m_simpleProgram->Use();
+	m_simpleProgram->SetUniform("transform", projection * view);
+	m_simpleProgram->SetUniform("color", glm::vec3(0.0f, 0.0f, 0.0f));
+	line1->Draw(m_simpleProgram.get());
 
 
 }
