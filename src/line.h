@@ -16,7 +16,7 @@ public:
 	const VertexLayout* GetVertexLayout() const { return m_vertexLayout.get(); }
 	BufferPtr GetVertexBuffer() const { return m_vertexBuffer; }
 
-	void UpdatePosition(glm::vec3 position);
+	void UpdatePosition(glm::vec3 newPosition);
 
 	void Draw(const Program* program) const;
 
@@ -27,6 +27,8 @@ private:
 	uint32_t m_primitiveType { GL_LINE_STRIP };
 	VertexLayoutUPtr m_vertexLayout;
 	BufferPtr m_vertexBuffer;
+
+	std::vector<glm::vec3> m_vertexPos;
 
 };
 

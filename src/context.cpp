@@ -76,7 +76,7 @@ bool Context::Init() {
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
-	line1 = Line::CreateLine(10);
+	line1 = Line::CreateLine(4 * 1/timeStep); // 라인의 길이가 fps에의해 결정이 되니까 저렇게하면 4초간 버티는 선이 완성!
 	
 	m_box = Mesh::CreateBox();
 	m_plane = Mesh::CreatePlane();
@@ -168,11 +168,13 @@ void Context::Render() {
 		// 시간 간격 크기를 사용하여 시뮬레이션 업데이트
 		ball->m_velocity += ball->m_acc * (float)timeStep;
 		ball->m_position += ball->m_velocity * (float)timeStep;
+		ball->m_position.y = glm::sin(currentTime * 4.0f);
+		line1->UpdatePosition(ball->m_position);
 
 		// 누적 변수에서 시간 간격 크기를 뺌
 		accumulator -= timeStep;
 	}
-	SPDLOG_INFO("cnt: {}", log);
+	// SPDLOG_INFO("cnt: {}", log);
 
 	ball->Draw(view, projection, m_cameraPos);
 	plane->Draw(view, projection, m_cameraPos);
